@@ -3,6 +3,7 @@ package me.noobedidoob.minigames.lasertag.session;
 import java.util.*;
 
 import me.noobedidoob.minigames.lasertag.methods.Inventories;
+import me.noobedidoob.minigames.lasertag.methods.PointEvents;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -54,7 +55,7 @@ public class Session implements Listener{
 		Inventories.openTimeInv(owner);
 		SESSIONS.add(this);
 		
-		for(Map m : Map.MAPS) mapVotes.put(m, 0);
+		for(Map m : Map.MAPS) getMapVotes().put(m, 0);
 		
 	}
 	public Session(Minigames minigames, Player owner, int teamsAmount) {
@@ -82,7 +83,7 @@ public class Session implements Listener{
 		Inventories.openTimeInv(owner);
 		SESSIONS.add(this);
 		
-		for(Map m : Map.MAPS) mapVotes.put(m, 0);
+		for(Map m : Map.MAPS) getMapVotes().put(m, 0);
 	}
 	
 	private boolean running = false;
@@ -102,7 +103,11 @@ public class Session implements Listener{
 								for (Player p : players) p.sendTitle("§aStarting Lasetag in §d2", "§eMap: §b" + map.getName(), 0, 30, 5);
 								Bukkit.getScheduler().scheduleSyncDelayedTask(minigames, () -> {
 									for (Player p : players) p.sendTitle("§aStarting Lasetag in §d1", "§eMap: §b" + map.getName(), 0, 20, 5);
-									Bukkit.getScheduler().scheduleSyncDelayedTask(minigames, () -> round.start(), 20);
+									Bukkit.getScheduler().scheduleSyncDelayedTask(minigames, () -> {
+										round.start();
+										if(withEvents) pointEvents.startEvents();
+										System.out.println("starting "+withEvents);
+									}, 20);
 								}, 20);
 							}, 20);
 						}, 20);
@@ -120,18 +125,18 @@ public class Session implements Listener{
 				round.stop(true);
 			} 
 		}
-		map.setUsed(false);
 		setAllPlayersWaitingInv();
+		if(withEvents) pointEvents.stopEvents();
 		
 		if(votedBefore) mapState = MapState.VOTING;
 		else mapState = MapState.SET;
 		votedBefore = false;
 		
 		for(Player p : players) {
-			hasPlayerVoted.put(p, false);
+			playerVotes.put(p, null);
 		}
 		for(Map m : Map.MAPS) {
-			mapVotes.put(m, 0);
+			getMapVotes().put(m, 0);
 		}
 
 		if(withCaptureTheFlag){
@@ -220,10 +225,10 @@ public class Session implements Listener{
 			mapState = MapState.VOTING;
 			broadcast("§aMap vote enabled! You can vote the map for this round!");
 			for(Map am : Map.MAPS) {
-				mapVotes.put(am, 0);
+				getMapVotes().put(am, 0);
 			}
 			for(Player p : players) {
-				hasPlayerVoted.put(p, false);
+				playerVotes.put(p, null);
 			}
 		} else {
 			mapState = MapState.SET;
@@ -245,48 +250,61 @@ public class Session implements Listener{
 		return mapState == MapState.NULL;
 	}
 
-	public HashMap<Map, Integer> mapVotes = new HashMap<>();
-	public HashMap<Player, Boolean> hasPlayerVoted = new HashMap<>();
+	public HashMap<Player, Map> playerVotes = new HashMap<>();
 	public void playerVoteMap(Player p, Map m) {
-		hasPlayerVoted.putIfAbsent(p,false);
-		if(!hasPlayerVoted.get(p)) {
-			hasPlayerVoted.put(p, true);
-			mapVotes.put(m, mapVotes.get(m)+1);
-			broadcast("§d"+p.getName()+" §avoted for the map §b"+m.getName()+" §7(§d"+mapVotes.get(m)+"§7)");
-			refreshScoreboard();
-		}
+		playerVotes.put(p, m);
+		getMapVotes().put(m, getMapVotes().get(m)+1);
+		refreshScoreboard();
 	}
-	
+	public HashMap<Map, Integer> getMapVotes(){
+		HashMap<Map, Integer> mapVotes = new HashMap<>();
+		playerVotes.forEach((p, m) -> {
+			if(m != null){
+				if(mapVotes.containsKey(m)){
+					mapVotes.put(m, mapVotes.get(m)+1);
+				} else mapVotes.put(m, 1);
+			}
+		});
+		return mapVotes;
+	}
+	public int getVotedMapAmount(){
+		List<Map> list = new ArrayList<>();
+		for(Player p : players){
+			if(playerVotes.get(p) != null && !list.contains(playerVotes.get(p))) list.add(playerVotes.get(p));
+		}
+		return list.size();
+	}
+
 	boolean votedBefore = false;
 	private boolean setSessionMap() {
 		if(mapState == MapState.VOTING) {
 			votedBefore = true;
-			Map m = Map.MAPS.get(0);
-			if(map != null) m = map;
-			int maxVote = mapVotes.get(Map.MAPS.get(0));
+			Map m = null;
+			int maxVote = 0;
 			for(Map am : Map.MAPS) {
-				if(maxVote < mapVotes.get(am)) {
-					maxVote = mapVotes.get(am);
+				if(getMapVotes().get(am) != null && maxVote < getMapVotes().get(am)) {
+					maxVote = getMapVotes().get(am);
 					m = am;
 				}
 			}
+
+			if(m == null){
+				admins.forEach(a -> sendMessage(a, "§cYou need at least one vote to start the game!"));
+				return false;
+			}
+
 			this.map = m;
 			
 			if(!isMapPlayable(map)) {
 				broadcast("§cThe map §6"+map.getName()+" §cis not playable!");
 				for(Map am : Map.MAPS) {
-					mapVotes.put(am, 0);
+					getMapVotes().put(am, 0);
 					refreshScoreboard();
 				}
 				return false;
 			}
-			if(m.isUsed()) {
-				broadcast("§cThe map §6"+map.getName()+" §c currently in use!");
-				return false;
-			}
 			
 			broadcast("§ePlaying with in the map §b"+map.getName());
-			map.setUsed(true);
 			mapState = MapState.SET;
 			refreshScoreboard();
 		}
@@ -298,20 +316,27 @@ public class Session implements Listener{
 				}
 			}
 			for(Map am : Map.MAPS) {
-				mapVotes.put(am, 0);
+				getMapVotes().put(am, 0);
 				refreshScoreboard();
 			}
 			mapState = MapState.NULL;
 			refreshScoreboard();
 			Inventories.openMapInv(owner);
 			return false;
-		} else if(map.isUsed()) {
-			for(Player a : admins) {
-				sendMessage(a, "§cThis map is currently in use! Please try again later or choose another map!");
-			}
-			return false;
 		}
-		if(withCaptureTheFlag) map.enableCTF(this);
+		if(withCaptureTheFlag) {
+			List<LasertagColor> colors = new ArrayList<>();
+			if (solo) {
+				for(Player ap : players){
+					colors.add(getPlayerColor(ap));
+				}
+			} else {
+				for(SessionTeam team : teams){
+					colors.add(team.getLasertagColor());
+				}
+			}
+			map.enableCTF(this, colors);
+		} else map.disableCTF();
 		return true;
 	}
 	public boolean isMapPlayable(Map m) {
@@ -342,8 +367,8 @@ public class Session implements Listener{
 		timeSet = true;
 		scoreboard.refresh();
 		if(announce) {
-			if(format == TimeFormat.HOURS) broadcast("§aSession time was set to §b"+Utils.getTimeFormatFromLong(this.time, "h")+" §ehours");
-			else if(format == TimeFormat.MINUTES) broadcast("§aRound time was set to §b"+Utils.getTimeFormatFromLong(this.time, "m")+" §eminutes");
+			if(format == TimeFormat.HOURS) broadcast("§aSession time was set to §b"+Utils.getTimeFormatFromLong(this.time, TimeFormat.HOURS)+" §ehours");
+			else if(format == TimeFormat.MINUTES) broadcast("§aRound time was set to §b"+Utils.getTimeFormatFromLong(this.time, TimeFormat.MINUTES)+" §eminutes");
 			else broadcast("§aRound time was set to §b"+this.time+" §eseconds");
 		}
 	}
@@ -417,16 +442,16 @@ public class Session implements Listener{
 			withCaptureTheFlag = ctf;
 			broadcast(((ctf)?"§aEnabled":"§cDisabled")+" §bcapture the flag mode!");
 			if(ctf){
-				if(mapState == MapState.SET && !map.withCaptureTheFlag()) {
+				if(mapState == MapState.SET && (!map.withCaptureTheFlag() | players.size() > map.getBaseAmount())) {
 					map = Map.MAPS.get(0);
 					Inventories.openMapInv(owner);
 				} else if(mapState == MapState.VOTING){
-					mapVotes.clear();
+					getMapVotes().clear();
 					setMap(null);
-					hasPlayerVoted.forEach((player, voted) -> {
-						if(voted) {
+					playerVotes.forEach((player, m) -> {
+						if(m != null) {
 							sendMessage(player, "§cPlease re-vote your map!");
-							hasPlayerVoted.put(player,false);
+							playerVotes.put(player,null);
 						}
 					});
 				}
@@ -448,9 +473,20 @@ public class Session implements Listener{
 	public boolean withGrenades(){
 		return withGrenade;
 	}
-	
-	
-	
+
+	private PointEvents pointEvents;
+	private boolean withEvents = false;
+	public void setWithPointEvents(boolean withPointEvents){
+		if(withEvents == withPointEvents) return;
+		if(pointEvents == null) pointEvents = new PointEvents(this);
+		pointEvents.setEnabled(withPointEvents);
+		broadcast(((withPointEvents)?"§aEnabled":"§cDisabled")+" §bpoint events");
+		this.withEvents = withPointEvents;
+		refreshScoreboard();
+	}
+	public boolean withPointEvents(){
+		return withEvents;
+	}
 	
 
 	private final HashMap<Player, Integer> playerPoints = new HashMap<>();
@@ -520,7 +556,7 @@ public class Session implements Listener{
 		players.add(p);
 		playerPoints.put(p, 0);
 		p.setLevel(0);
-		hasPlayerVoted.put(p, false);
+		playerVotes.put(p, null);
 		sendMessage(p, "§aWelcome to the Game, §b"+p.getName()+"§r§a!");
 		
 		if (isTeams()) {
@@ -626,8 +662,8 @@ public class Session implements Listener{
 			players.add(p);
 			playerPoints.put(p, points);
 			p.setLevel(points);
-			hasPlayerVoted.put(p, false);
-			
+			playerVotes.put(p, null);
+
 			if(isTeams()) {
 				addPlayerToTeam(p, color);
 			} else {
@@ -779,8 +815,48 @@ public class Session implements Listener{
 		}
 		return false;
 	}
-	
-	
+
+	public void attemptStart(Player p){
+		if(withMultiweapons() && !isEveryBodyReady()) {
+			sendMessage(p, "§cNot everybody is ready!");
+			for(Player up : getNotReadyPlayers()) {
+				Inventories.openSecondaryWeaponChooserInv(up);
+			}
+		} else {
+			if(getPlayers().length > 1) {
+				boolean enoughTeams = true;
+				if(isTeams()) {
+					boolean rearranged = false;
+					for (SessionTeam sessionTeam : teams) {
+						if(sessionTeam.getPlayers().length == 0) {
+							rearranged = true;
+							if(getTeams()[teamsAmount-2].getPlayers().length > 0){
+								for (Player player : getTeams()[teamsAmount-2].getPlayers()) {
+									addPlayerToTeam(player, getTeams()[teamsAmount-3]);
+								}
+							}
+							setTeamsAmount(teamsAmount-1);
+						}
+					}
+					if(rearranged){
+						Session.sendMessage(p, "§cAutomatically removed empty teams, start again to confirm!");
+						return;
+					}
+
+					int teamsWithPlayers = 0;
+					for(SessionTeam team : getTeams()) {
+						if(team.getPlayers().length > 0) teamsWithPlayers++;
+					}
+					if(teamsWithPlayers < 2) enoughTeams = false;
+				}
+				if(enoughTeams && !justStopped) {
+					start(true);
+				}
+				else Session.sendMessage(p, "§cThere must be at least 2 teams with at least 1 player in it!");
+			} else Session.sendMessage(p, "§cNot enough players!");
+		}
+	}
+
 	
 	public void refreshScoreboard() {
 		scoreboard.refresh();

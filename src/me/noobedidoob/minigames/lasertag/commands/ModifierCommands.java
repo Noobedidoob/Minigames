@@ -13,6 +13,7 @@ import me.noobedidoob.minigames.lasertag.session.Session;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class ModifierCommands implements CommandExecutor, TabCompleter {
 
@@ -127,21 +128,26 @@ public class ModifierCommands implements CommandExecutor, TabCompleter {
             if(Session.getPlayerSession((Player) sender) != null){
                 sender.sendMessage("\n§7—————————§b§lModifiers§r§7—————————");
                 Session s = Session.getPlayerSession((Player) sender);
-                s.modifiers.modValues.forEach((m, v) -> sender.sendMessage("§7> " + m.name() + ": §a" + s.getModValue(m).toString()));
-                sender.sendMessage("§7—————————————————————\n");
+                for (Mod m : Mod.values()) {
+                    sender.sendMessage("§7> " + m.getCommand() + ": §a" + s.getModValue(m).toString());
+                    if(m.spaceAfter)sender.sendMessage(" ");
+                }
+                sender.sendMessage("§7———————————————————————————\n");
             } else {
                 sender.sendMessage("\n§7———————§b§lStanderd Modifiers§r§7———————");
                 for (Mod m : Mod.values()) {
-                    sender.sendMessage("§7> " + m.name()+ ": §a" + m.getOg().toString());
+                    sender.sendMessage("§7> " + m.getCommand()+ ": §a" + m.getOg().toString());
+                    if(m.spaceAfter)sender.sendMessage("§7|");
                 }
-                sender.sendMessage("§7——————————————————\n");
+                sender.sendMessage("§7————————————————————————\n");
             }
         } else {
             sender.sendMessage("\n§7-----------§b§lStanderd Modifiers§r§7-----------");
             for (Mod m : Mod.values()) {
-                sender.sendMessage("§7> " + m.name()+ ": §a" + m.getOg().toString());
+                sender.sendMessage("§7> " + m.getCommand()+ ": §a" + m.getOg().toString());
+                if(m.spaceAfter)sender.sendMessage("§7|");
             }
-            sender.sendMessage("§7---------------------------------------\n");
+            sender.sendMessage("§7----------------------------------------\n");
         }
     }
 
@@ -158,7 +164,7 @@ public class ModifierCommands implements CommandExecutor, TabCompleter {
         } else if(sender instanceof Player && args.length >= 2 && args[0].equalsIgnoreCase("set") && Session.getPlayerSession((Player) sender).isAdmin((Player) sender)) {
             if(args.length == 2) {
                 for(Mod m : Mod.values()) {
-                    if(m.name().toLowerCase().contains(args[1].toLowerCase())) list.add(m.name().toLowerCase());
+                    if(m.getCommand().toLowerCase().contains(args[1].toLowerCase())) list.add(m.getCommand());
                 }
             } else if(args.length == 3 && Mod.getMod(StringUtils.replace(args[1].toUpperCase(), "-", "_")) != null) {
                 if(Mod.getMod(StringUtils.replace(args[1].toUpperCase(), "-", "_")).getValueType().getName().equals("true/false")) {

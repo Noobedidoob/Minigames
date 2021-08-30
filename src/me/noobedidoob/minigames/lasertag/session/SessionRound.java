@@ -98,7 +98,7 @@ public class SessionRound {
 		if(session.withMultiweapons()){
 			p.getInventory().setItem(1, Weapon.DAGGER.getColoredItem(playerColor));
 			ItemStack secondaryWeapon = session.getPlayerSecondaryWeapon(p).getColoredItem(playerColor);
-			if(session.getPlayerSecondaryWeapon(p) == Weapon.SNIPER) secondaryWeapon.setAmount(session.getIntMod(Mod.SNIPER_AMMO_BEFORE_COOLDOWN));
+			if(session.getPlayerSecondaryWeapon(p) == Weapon.SNIPER) secondaryWeapon.setAmount(session.getIntMod(Mod.SNIPER_AMMO));
 			p.getInventory().setItem(2, secondaryWeapon);
 		}
 

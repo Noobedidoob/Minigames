@@ -4,60 +4,100 @@ import me.noobedidoob.minigames.Minigames;
 import me.noobedidoob.minigames.utils.Pair;
 import me.noobedidoob.minigames.utils.Utils.ValueType;
 
+import java.util.Locale;
+
 public enum Mod{
-    POINTS(1, true, 1, 5, "Normal amount of points a player gets"),
-    SHOT_KILL_EXTRA_POINTS(0, true,-2, 5, "Extra points when a player shot normal"),
-    SNIPER_KILL_EXTRA_POINTS(1, true, -2, 10, "Extra points when killing with snipe-shot"),
-    HEADSHOT_EXTRA_POINTS(1, true, -2, 10, "Extra ponts when killing with headshot"),
-    BACKSTAB_EXTRA_POINTS(2, true, -2, 10, "Extra points when backstabbing"),
-    GRENADE_KILL_EXTRA_POINTS(1, true, -2, 10, "Extra points when killing with an grenade"),
-    PVP_KILL_EXTRA_POINTS(0, true, -2, 5, "Extra ponts when killed at melee"),
-    STREAK_EXTRA_POINTS(2, true, -1, 10, "Extra points when having a streak"),
-    STREAK_SHUTDOWN_EXTRA_POINTS(2, true, 2, 10, "Extra points when shutting down a streak"),
-    MULTIKILLS_EXTRA_POINTS(3, true, 3, 10, "Extra points when killing multiple players at once"),
-    CAPTURE_THE_FLAG_POINTS(2, true, -1, 10, "Points a player gets when delivering an enemys flag"),
+    POINTS(1, true, 1, 5, "Points x","Normal amount of points a player gets"),
+    SHOT_KILL_EXTRA_POINTS(0, true,-1, 5, "Shot kill points: ", "Extra points when a player shot normal"),
+    SNIPER_KILL_EXTRA_POINTS(1, true, -1, 10, "Sniper kill points: ", "Extra points when killing with snipe-shot"),
+    HEADSHOT_EXTRA_POINTS(1, true, -1, 10, "Headshot kill points: ", "Extra ponts when killing with headshot"),
+    BACKSTAB_EXTRA_POINTS(2, true, -1, 10, "Backstab kill points: ", "Extra points when backstabbing"),
+    GRENADE_KILL_EXTRA_POINTS(1, true, -1, 10, "Grenade kill points: ", "Extra points when killing with an grenade"),
+    PVP_KILL_EXTRA_POINTS(0, true, -1, 5, "Melee kill points: ", "Extra ponts when killed at melee"),
+    STREAK_EXTRA_POINTS(2, true, -1, 10, "Streak kill points: ", "Extra points when having a streak"),
+    STREAK_SHUTDOWN_EXTRA_POINTS(2, true, 2, 10, "Streak shutdown points: ", "Extra points when shutting down a streak"),
+    MULTIKILLS_EXTRA_POINTS(3, true, 3, 10, "Multiple kills points: ", "Extra points when killing multiple players at once"),
+    CAPTURE_THE_FLAG_POINTS(15, true, -1, 30, "Flag capture points: ", "Points a player gets when delivering an enemys flag", true),
 
-    MINIMAL_SNIPE_DISTANCE(30, false, null, null, "Minimal distance of a shot to be a sniper shot"),
+    MINIMAL_SNIPE_DISTANCE(25,  "Minimal distance of a shot to be a sniper shot", true),
 
-    MINIMAL_KILLS_FOR_STREAK(5, false, null, null, "Minimal kill amount required for a streak"),
+    MINIMAL_KILLS_FOR_STREAK(5, "Minimal kill amount required for a streak", true),
 
-    SPAWNPROTECTION_SECONDS(10, false, null, null, "Seconds a player is protected after spawning"),
+    SPAWNPROTECTION_SECONDS(10, "Seconds a player is protected after spawning", true),
 
-    WIDTH_ADDON(0D, true, -0.5D, 1, "Addon to the width of a players hitbox"),
-    HEIGHT_ADDON(0d, true, -0.5D, 1, "ddon to the height of a players hitbox"),
+    WIDTH_ADDON(0D, true, -0.5D, 1, "Width addon: ", "Addon to the width of a players hitbox"),
+    HEIGHT_ADDON(0d, true, -0.5D, 1, "Height addon: ", "ddon to the height of a players hitbox", true),
 
-    SHOOT_THROUGH_BLOCKS(false, true, false, true, "Shoot through blocks"),
-    HIGHLIGHT_PLAYERS(false, true, false, true, "Making players glow and more visible"),
+    SHOOT_THROUGH_BLOCKS(false, true, false, true, "Shoot trough blocks: ", "Shoot through blocks"),
+    HIGHLIGHT_PLAYERS(false, true, false, true, "Glowing players: ", "Making players glow and more visible", true),
 
-    GRENADE_EFFECT_RADUIS(2,true, 1, 5,"Radius in wich a player is affected by the grenade explosion"),
-    GRENADE_MAX_DETONATION_COUNTDOWN(10,false, 1, 5,"Max selectable seconds for the detonation cooldown"),
-    GRENADE_MIN_DETONATION_COUNTDOWN(1,false, 1, 5,"Min selectable seconds for the detonation cooldown"),
+    GRENADE_EFFECT_RADUIS(2,true, 1, 5,"Grenade radius: ", "Radius in wich a player is affected by the grenade explosion"),
+    GRENADE_MAX_DETONATION_COUNTDOWN(10,"Max selectable seconds for the detonation cooldown"),
+    GRENADE_MIN_DETONATION_COUNTDOWN(1,"Min selectable seconds for the detonation cooldown", true),
 
-    LASERGUN_COOLDOWN_TICKS(12, true, 1, 30, "Ticks (20 ticks = 1 second) a lasergun takes to cool down"),
-    LASERGUN_MULTIWEAPONS_COOLDOWN_TICKS(2, false, null, null, "Ticks a lasergun takes to cool down when playing with multiple weapons"),
-    SNIPER_COOLDOWN_TICKS(100, true, 10, 100,"Ticks a sniperrifle takes to cool down"),
-    SHOTGUN_COOLDOWN_TICKS(40, true, 5, 40,"Ticks a shotgun takes to cool down"),
-    GRENADE_COOLDOWN_TICKS(300, true, 10, 100,"Ticks a grenade takes to cool down"),
-    SNIPER_AMMO_BEFORE_COOLDOWN(3, true, 1, 10, "Maximal sniper ammo"),
+    LASERGUN_NORMAL_COOLDOWN_TICKS(12, true, 1, 30, "Lasergun cooldown: ", "Ticks (20 ticks = 1 second) a lasergun takes to cool down"),
+    LASERGUN_MULTIWEAPONS_COOLDOWN_TICKS(2, true, 1, 12, "Lasergun cooldown: ", "Ticks a lasergun takes to cool down when playing with multiple weapons"),
+    SNIPER_COOLDOWN_TICKS(100, true, 10, 100, "Sniper cooldown: ", "Ticks a sniperrifle takes to cool down"),
+    SHOTGUN_COOLDOWN_TICKS(40, true, 5, 40, "Shotgun cooldown: ", "Ticks a shotgun takes to cool down"),
+    GRENADE_COOLDOWN_TICKS(400, true, 10, 100, "Grenade cooldown: ", "Ticks a grenade takes to cool down"),
+    SNIPER_AMMO(3, true, 1, 10,  "Sniper ammo: ", "Maximal sniper ammo", true),
 
-    LASERGUN_NORMAL_DAMAGE(100, true, 50 , 100, "Normal lasergun shot damage"),
-    LASERGUN_MULTIWEAPONS_DAMAGE(7, true, 7, 15, "lasergun shot damage when playing with multiple weapons"),
-    LASERGUN_PVP_DAMAGE(8, true, 8, 20, "Lasergun melee damage (only without multiweapons)"),
-    SHOTGUN_DAMAGE(11, true, 5, 20, "Shotgun shot damage"),
-    SNIPER_DAMAGE(100, true, 10, 20, "Sniper shot damage"),
-    DAGGER_DAMAGE(13, true, 5, 20, "Stabber melee damage"),
-    GRENADE_DAMAGE(15, true, 5, 20, "Grenade explosion damage"),
+    LASERGUN_NORMAL_DAMAGE(100, true, 50 , 100, "Lasergun damage: ", "Normal lasergun shot damage"),
+    LASERGUN_MULTIWEAPONS_DAMAGE(7, true, 7, 15, "Lasergun damage: ", "lasergun shot damage when playing with multiple weapons"),
+    LASERGUN_PVP_DAMAGE(8, true, 8, 20, "Lasergun melee damage: ", "Lasergun melee damage (only without multiweapons)"),
+    SHOTGUN_DAMAGE(11, true, 5, 20, "Shotgun damage: ", "Shotgun shot damage"),
+    SNIPER_DAMAGE(100, true, 10, 20, "Sniper damage: ", "Sniper shot damage"),
+    DAGGER_DAMAGE(13, true, 5, 20, "Dagger damage: ", "Stabber melee damage"),
+    GRENADE_DAMAGE(15, true, 5, 20, "Grenade damage: ", "Grenade explosion damage", true),
 
-    HEADSHOT_DAMAGE_MULTIPLIKATOR(1.3d, true, 0.5D, 5D, "Extra damage when hitting the head"),
-    SNIPER_SHOT_DAMAGE_MULTIPLIKATOR(1.3d, true, 0.5D, 5D, "Extra damage when sniping");
+    HEADSHOT_DAMAGE_MULTILIER(1.3d, true, 0.5D, 5D, "Headshot damage multiplier: ", "Extra damage when hitting the head"),
+    SNIPER_SHOT_DAMAGE_MULTIPLIER(1.3d, true, 0.5D, 5D, "Sniper shot damage multiplier: ", "Extra damage when sniping", true),
+
+
+    POINT_EVENT_FIRST_COUNTDOWN_TICKS(60*20, "Countdown after the point events start fot the first time"),
+    POINT_EVENT_DEFAULT_EVENT_LENGTH_TICKS(20*45, "How long a point event lasts"),
+    POINT_EVENT_DEFAULT_COUNTDOWN_TICKS(20*45, "Countdown between the point events"),
+    POINT_EVENT_ONLY_POINTS(true, "If events shall only change points");
+
 
     private Object ogValue;
     private final String description;
     private final ValueType valueType;
 
-    public final boolean inPointEvents;
+    public final boolean inPointEvents ;
     public final Pair eventChangeRange;
-    Mod(Object value, boolean inPointEvents, Object min, Object max, String description) {
+    public final String eventName;
+
+    public final boolean spaceAfter;
+
+    Mod(Object value, String description) {
+        this.ogValue = value;
+        this.description = description;
+        if(value instanceof Double) valueType = ValueType.DOUBLE;
+        else if(value instanceof Integer) valueType = ValueType.INTEGER;
+        else valueType = ValueType.BOOLEAN;
+
+        this.inPointEvents = false;
+        this.eventChangeRange = new Pair(null, null);
+        this.eventName = "";
+
+        this.spaceAfter = false;
+    }
+    Mod(Object value, String description, boolean spaceAfter) {
+        this.ogValue = value;
+        this.description = description;
+        if(value instanceof Double) valueType = ValueType.DOUBLE;
+        else if(value instanceof Integer) valueType = ValueType.INTEGER;
+        else valueType = ValueType.BOOLEAN;
+
+        this.inPointEvents = false;
+        this.eventChangeRange = new Pair(null, null);
+        this.eventName = "";
+
+        this.spaceAfter = spaceAfter;
+    }
+
+    Mod(Object value, boolean inPointEvents, Object min, Object max, String eventName, String description) {
         this.ogValue = value;
         this.description = description;
         if(value instanceof Double) valueType = ValueType.DOUBLE;
@@ -66,7 +106,24 @@ public enum Mod{
 
         this.inPointEvents = inPointEvents;
         this.eventChangeRange = new Pair(min, max);
+        this.eventName = eventName;
+
+        this.spaceAfter = false;
     }
+    Mod(Object value, boolean inPointEvents, Object min, Object max, String eventName, String description, boolean spaceAfter) {
+        this.ogValue = value;
+        this.description = description;
+        if(value instanceof Double) valueType = ValueType.DOUBLE;
+        else if(value instanceof Integer) valueType = ValueType.INTEGER;
+        else valueType = ValueType.BOOLEAN;
+
+        this.inPointEvents = inPointEvents;
+        this.eventChangeRange = new Pair(min, max);
+        this.eventName = eventName;
+
+        this.spaceAfter = spaceAfter;
+    }
+
 
 
     public Object getOg() {
@@ -110,6 +167,15 @@ public enum Mod{
     public ValueType getValueType() {
         return valueType;
     }
+    public String getCommand(){
+        StringBuilder n = new StringBuilder();
+        boolean nextUpperCase = false;
+        for (char c : name().toLowerCase().toCharArray()) {
+            if(c != '_') n.append(nextUpperCase ? Character.toString((c)).toUpperCase() : c);
+            nextUpperCase = (c == '_');
+        }
+        return n.toString();
+    }
 
 //    public String getName(){
 //        return this.name().charAt(0)+this.name().substring(1).toLowerCase()
@@ -119,6 +185,12 @@ public enum Mod{
         for(Mod m : Mod.values()) {
             if(m.name().equalsIgnoreCase(name.replace(" ", "").replace("-", "_"))) return m;
         }
+        StringBuilder n = new StringBuilder();
+        for (char c : name.toCharArray()) n.append(Character.isLowerCase(c) ? c : "_"+c);
+        for(Mod m : Mod.values()) {
+            if(m.name().equalsIgnoreCase(n.toString().replace(" ", ""))) return m;
+        }
+
         return null;
     }
 

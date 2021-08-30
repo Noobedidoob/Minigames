@@ -54,7 +54,7 @@ public enum Weapon {
 	public ItemStack getTestItem(int amount) {
 		ItemStack newItem = item.clone();
 		item.setAmount(amount);
-		if(this == SNIPER) newItem.setAmount(Mod.SNIPER_AMMO_BEFORE_COOLDOWN.getOgInt());
+		if(this == SNIPER) newItem.setAmount(Mod.SNIPER_AMMO.getOgInt());
 		ItemMeta meta = newItem.getItemMeta();
 		meta.setDisplayName(meta.getDisplayName()+" Test");
 		newItem.setItemMeta(meta);
@@ -110,15 +110,15 @@ public enum Weapon {
 	}
 	public void setCooldown(Player p) {
 		Session s = Session.getPlayerSession(p);
-		int cooldown = Mod.LASERGUN_COOLDOWN_TICKS.getOgInt();
+		int cooldown = Mod.LASERGUN_NORMAL_COOLDOWN_TICKS.getOgInt();
 		if(s != null){
 			switch (this) {
 			case LASERGUN:
-				cooldown = (s.withMultiweapons())? s.getIntMod(Mod.LASERGUN_MULTIWEAPONS_COOLDOWN_TICKS) : s.getIntMod(Mod.LASERGUN_COOLDOWN_TICKS);
+				cooldown = (s.withMultiweapons())? s.getIntMod(Mod.LASERGUN_MULTIWEAPONS_COOLDOWN_TICKS) : s.getIntMod(Mod.LASERGUN_NORMAL_COOLDOWN_TICKS);
 				break;
 			case SNIPER:
 				cooldown = s.getIntMod(Mod.SNIPER_COOLDOWN_TICKS);
-				Utils.runLater(() -> p.getInventory().getItem(p.getInventory().first(SNIPER.material)).setAmount(s.getIntMod(Mod.SNIPER_AMMO_BEFORE_COOLDOWN)), s.getIntMod(Mod.SNIPER_COOLDOWN_TICKS));
+				Utils.runLater(() -> p.getInventory().getItem(p.getInventory().first(SNIPER.material)).setAmount(s.getIntMod(Mod.SNIPER_AMMO)), s.getIntMod(Mod.SNIPER_COOLDOWN_TICKS));
 				break;
 			case SHOTGUN:
 				cooldown = s.getIntMod(Mod.SHOTGUN_COOLDOWN_TICKS);
@@ -136,7 +136,7 @@ public enum Weapon {
 				break;
 			case SNIPER:
 				cooldown = Mod.SNIPER_COOLDOWN_TICKS.getOgInt();
-				Utils.runLater(() -> p.getInventory().getItem(p.getInventory().first(SNIPER.material)).setAmount(Mod.SNIPER_AMMO_BEFORE_COOLDOWN.getOgInt()), Mod.SNIPER_COOLDOWN_TICKS.getOgInt());
+				Utils.runLater(() -> p.getInventory().getItem(p.getInventory().first(SNIPER.material)).setAmount(Mod.SNIPER_AMMO.getOgInt()), Mod.SNIPER_COOLDOWN_TICKS.getOgInt());
 				break;
 			case GRENADE:
 				cooldown = Mod.GRENADE_COOLDOWN_TICKS.getOgInt()/10;

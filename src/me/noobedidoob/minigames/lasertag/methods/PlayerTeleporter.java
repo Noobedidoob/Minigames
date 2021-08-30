@@ -23,6 +23,9 @@ public class PlayerTeleporter {
 				return session.getMap().getRandomSpawnLocation();
 			}
 		} else {
+			if(session.withCaptureTheFlag() && session.getMap().withCaptureTheFlag() && session.getMap().withBaseSpawn()){
+				return session.getMap().getTeamSpawnLoc(session.getPlayerColor(p));
+			}
 			if(!session.getMap().withRandomSpawn()) {
 				return session.getMap().getTeamSpawnLoc(session.getPlayerColor(p));
 			} else {

@@ -13,8 +13,8 @@ Lasertag:
     streak-extra-points: 2
     streak-shutdown-extra-points: 2
     multikills-extra-points: 3
-    capture-the-flag-points: 2
-    minimal-snipe-distance: 30
+    capture-the-flag-points: 15
+    minimal-snipe-distance: 25
     minimal-kills-for-streak: 5
     spawnprotection-seconds: 10
     width-addon: 0.0
@@ -27,7 +27,7 @@ Lasertag:
     sniper-cooldown-ticks: 100
     shotgun-cooldown-ticks: 40
     grenade-cooldown-ticks: 300
-    sniper-ammo-before-cooldown: 3
+    sniper-ammo: 3
     lasergun-normal-damage: 100
     lasergun-multiweapons-damage: 7
     lasergun-pvp-damage: 8
@@ -393,6 +393,7 @@ Lasertag:
           max: -106
       basespawn:
         enabled: true
+        capture-the-flag: true
         red:
           x: 150.5
           y: 14

@@ -138,7 +138,7 @@ public class Flag implements Listener {
                         teleportToBase();
                         if(!coolingDown) {
                             try {
-                                session.addPoints(p, session.getIntMod(Mod.CAPTURE_THE_FLAG_POINTS), playerColor.getChatColor() + p.getName() + " §7§ocaptured the flag from " + color.getChatColor() + ((session.isTeams() ? "team " + color : session.getPlayerFromColor(color).getName())));
+                                session.addPoints(p, session.getIntMod(Mod.CAPTURE_THE_FLAG_POINTS), playerColor.getChatColor() + p.getName() + " §7§ocaptured the flag from " + color.getChatColor() + ((session.isTeams() ? "team " + color : session.getPlayerFromColor(color).getName())) +" §7(§a+"+session.getIntMod(Mod.CAPTURE_THE_FLAG_POINTS)+" point"+((session.getIntMod(Mod.CAPTURE_THE_FLAG_POINTS) > 1)?"s":"")+"§7)");
                             } catch (Exception exception) {
                                 Bukkit.broadcastMessage("uff");
                             }
@@ -247,8 +247,10 @@ public class Flag implements Listener {
     }
     public void disable(){
         this.session = null;
-        armorStand.getEquipment().setHelmet(new ItemStack(Material.AIR));
-        armorStand.remove();
+        if(armorStand != null) {
+            armorStand.getEquipment().setHelmet(new ItemStack(Material.AIR));
+            armorStand.remove();
+        }
 
         if(playerAttachedTo != null){
             PLAYER_FLAG.put(playerAttachedTo,null);

@@ -131,17 +131,7 @@ public class Utils {
 		return skull;
 	}
 
-	
-	public static String getTimeFormatFromLong(long seconds, String type) {
-		long millis = seconds*1000;
-	    SimpleDateFormat dateFormat = new SimpleDateFormat("mm:ss");
-	    if(type.equalsIgnoreCase("h")) dateFormat = new SimpleDateFormat("HH:mm:ss");
-	    if(type.equalsIgnoreCase("s")) dateFormat = new SimpleDateFormat("ss");
-	    TimeZone tz = TimeZone.getTimeZone("MESZ");
-	    dateFormat.setTimeZone(tz);
-		return dateFormat.format(new Date(millis));
-	}
-	
+
 	public static void removeItemFromPlayer(Player p, ItemStack i) {
 		ItemStack[] ogInv = p.getInventory().getContents();
 		List<ItemStack> isList = new ArrayList<>();
@@ -155,11 +145,21 @@ public class Utils {
 
 	}
 
+	public static String getTimeFormatFromLong(long seconds, TimeFormat type) {
+		long millis = seconds*1000;
+		SimpleDateFormat dateFormat = new SimpleDateFormat("mm:ss");
+		if(type == TimeFormat.HOURS) dateFormat = new SimpleDateFormat("HH:mm:ss");
+		else if(type == TimeFormat.SECONDS) dateFormat = new SimpleDateFormat("ss");
+		TimeZone tz = TimeZone.getTimeZone("MESZ");
+		dateFormat.setTimeZone(tz);
+		return dateFormat.format(new Date(millis));
+	}
+
 	public enum TimeFormat{
 		SECONDS,
 		MINUTES,
 		HOURS;
-		
+
 		public static TimeFormat getFromString(String s) {
 			String format = s.substring(0, 1).toUpperCase();
 			for(TimeFormat tf : TimeFormat.values()) {
@@ -240,6 +240,23 @@ public class Utils {
 		public String getName(){
 			return this.name().charAt(0)+this.name().substring(1).toLowerCase();
 		}
+	}
+
+	public static boolean IsOneTrue(boolean... vals){
+		boolean state = false;
+		for (boolean v: vals) {
+			if(!v) continue;
+			if(!state) state = true;
+			if(state) state = false;
+		}
+		return state;
+	}
+	public static int TrueAmount(boolean... vals){
+		int i = 0;
+		for (boolean v: vals) {
+			if(v) i++;
+		}
+		return i;
 	}
 
 }

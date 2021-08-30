@@ -82,7 +82,6 @@ public class Map {
 	public void setWithCaptureTheFlag(boolean ctf){
 		this.captureTheFlag = ctf;
 	}
-
 	public boolean withCaptureTheFlag(){
 		return captureTheFlag;
 	}
@@ -181,14 +180,6 @@ public class Map {
 	}
 	
 	
-	private boolean used = false;
-	public void setUsed(boolean used) {
-		this.used = used;
-	}
-	public boolean isUsed() {
-		return used;
-	}
-	
 	private boolean enabled = true;
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
@@ -198,20 +189,26 @@ public class Map {
 	}
 
 
-	public void enableCTF(Session session){
+	public void enableCTF(Session session, List<LasertagColor> colors){
 		if(captureTheFlag) {
-			for(Entity e : world.getNearbyEntities(new Location(world, area.getMaxX()-area.getWidthX()/2d, area.getMaxY()-area.getHeight()/2d, area.getMaxZ()-area.getWidthZ()/2d), area.getWidthX()+4, area.getHeight()+4, area.getWidthZ()+4)){
-				if(e instanceof ArmorStand) {
-					((ArmorStand) e).getEquipment().clear();
-					e.remove();
-				}
-			}
-			baseFlag.forEach((lasertagColor, flag) -> flag.enable(session));
+			removeAllArmorStands();
+			baseFlag.forEach((lasertagColor, flag) -> {
+				if(colors.contains(lasertagColor)) flag.enable(session);
+			});
 		}
 	}
 	public void disableCTF(){
 		if(captureTheFlag) {
+			removeAllArmorStands();
 			baseFlag.forEach((lasertagColor, flag) -> flag.disable());
+		}
+	}
+	private void removeAllArmorStands(){
+		for(Entity e : world.getNearbyEntities(new Location(world, area.getMaxX()-area.getWidthX()/2d, area.getMaxY()-area.getHeight()/2d, area.getMaxZ()-area.getWidthZ()/2d), area.getWidthX()+4, area.getHeight()+4, area.getWidthZ()+4)){
+			if(e instanceof ArmorStand) {
+				((ArmorStand) e).getEquipment().clear();
+				e.remove();
+			}
 		}
 	}
 

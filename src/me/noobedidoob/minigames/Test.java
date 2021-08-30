@@ -2,7 +2,11 @@ package me.noobedidoob.minigames;
 
 import me.noobedidoob.minigames.utils.Utils;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -11,6 +15,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class Test implements CommandExecutor, Listener {
 
@@ -21,14 +26,25 @@ public class Test implements CommandExecutor, Listener {
 
 
     public void test(Player p) {
-        p.sendMessage( "testing");
-
-
+        BossBar bar = Bukkit.createBossBar(ChatColor.GREEN+"Test§bwdw", BarColor.GREEN, BarStyle.SOLID);
+        bar.addPlayer(p);
+        int time = 20*10;
+        new BukkitRunnable(){
+            int curr = time;
+            @Override
+            public void run() {
+                if(curr > 0){
+                    curr--;
+                    bar.setProgress((float)curr/time);
+                } else {
+                    cancel();
+                    bar.removeAll();
+                }
+            }
+        }.runTaskTimer(Minigames.INSTANCE, 1, 1);
     }
     public void test2(Player p){
-        int amount = p.getInventory().getItemInMainHand().getAmount();
-        if(amount < 5) p.getInventory().getItemInMainHand().setAmount(amount+1);
-        else p.getInventory().getItemInMainHand().setAmount(1);
+        p.sendMessage(p.getInventory().contains(Material.DIAMOND)+"");
     }
 
 

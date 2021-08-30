@@ -207,6 +207,7 @@ public class Lasertag implements Listener{
 		p.getInventory().setItem(1, Utils.getItemStack(Material.NETHER_STAR,"§eCreate new session"));
 	}
 
+	//TODO	implement grenade
 	public static void openPlayerFindSessionInv(Player p) {
 		Inventory inv = Bukkit.createInventory(null, (((Session.getAllSessions().length-1)/9)+1)*9, "§0Join a session:");
 		

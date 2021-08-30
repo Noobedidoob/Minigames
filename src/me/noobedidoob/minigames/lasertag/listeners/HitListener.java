@@ -77,6 +77,11 @@ public class HitListener implements Listener {
 				} else {
 					e.setCancelled(true);
 				}
+			} else {
+				if(Utils.isPlayerBehindOtherPlayer(damager, victim)) {
+					victim.setGlowing(true);
+					Utils.runLater(() -> victim.setGlowing(false), 5);
+				}
 			}
 		}
 	}

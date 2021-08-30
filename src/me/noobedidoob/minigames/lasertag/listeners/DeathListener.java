@@ -2,6 +2,7 @@ package me.noobedidoob.minigames.lasertag.listeners;
 
 import java.util.HashMap;
 
+import me.noobedidoob.minigames.lasertag.methods.Weapon;
 import me.noobedidoob.minigames.utils.Flag;
 import me.noobedidoob.minigames.utils.Grenade;
 import me.noobedidoob.minigames.utils.Utils;
@@ -40,8 +41,8 @@ public class DeathListener implements Listener {
 		
 		if (victim.getGameMode() == GameMode.ADVENTURE) {
 			if (damage < victim.getHealth()) {
-				if(headshot) damage *= session.getDoubleMod(Mod.HEADSHOT_DAMAGE_MULTIPLIKATOR);
-				if(snipe) damage *= session.getDoubleMod(Mod.SNIPER_SHOT_DAMAGE_MULTIPLIKATOR);
+				if(headshot) damage *= session.getDoubleMod(Mod.HEADSHOT_DAMAGE_MULTILIER);
+				if(snipe) damage *= session.getDoubleMod(Mod.SNIPER_SHOT_DAMAGE_MULTIPLIER);
 				victim.damage(damage);
 				if(type == HitType.SHOT | type == HitType.GRENADE) killer.playSound(killer.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1f, 0);
 				return false;
@@ -105,6 +106,9 @@ public class DeathListener implements Listener {
 			if (Session.getPlayerSession(p).withCaptureTheFlag() && Flag.hasPlayerFlag(p)) {
 				Flag.getPlayerFlag(p).drop(p.getLocation());
 			}
+		}
+		for (Weapon w: Weapon.values() ) {
+			p.setCooldown(w.getType(), 1);
 		}
 	}
 	

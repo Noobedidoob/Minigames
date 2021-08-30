@@ -139,13 +139,15 @@ public class InventoryListener implements Listener {
                         if(slot == 2) {
                             if(inv.getItem(4).getAmount() > 1) {
                                 inv.getItem(4).setAmount(inv.getItem(4).getAmount()-1);
-                                if(inv.getItem(4).getAmount() == 1) {
-                                    inv.getItem(4).setType(Material.BARRIER);
-                                    inv.getItem(4).getItemMeta().setDisplayName("§cNo Teams -> §7(§bSOLO§7)");
-                                }
+                                if(inv.getItem(4).getAmount() == 1) inv.setItem(4, Utils.getItemStack(Material.BARRIER, "§cSolo"));
+                                else if(inv.getItem(4).getAmount() == 2) inv.setItem(2, Inventories.getSubtractionItem("§c§lSolo"));
                             }
+                        } else if(slot == 4) {
+                            if(inv.getItem(4).getAmount() < 2) Inventories.openTeamsInv(p, 2);
+                            else if(inv.getItem(4).getAmount() >= 2) Inventories.openTeamsInv(p, 1);
                         } else if(slot == 6) {
                             if(inv.getItem(4).getAmount() < 8) inv.getItem(4).setAmount(inv.getItem(4).getAmount()+1);
+                            if(inv.getItem(4).getAmount() == 2) inv.setItem(4, Utils.getLeatherArmorItem(Material.LEATHER_CHESTPLATE, "§aTeams: §b2", Lasertag.LasertagColor.Red.getColor(), 2));else if(inv.getItem(4).getAmount() == 3) inv.setItem(2, Inventories.getSubtractionItem("§c§l-1 §r§bTeam"));
                         } else if(slot == 8) {
                             session.setTeamsAmount(inv.getItem(4).getAmount());
                             p.closeInventory();
@@ -188,13 +190,17 @@ public class InventoryListener implements Listener {
                             inv.setItem(1,(!session.withMultiweapons())? Weapon.DAGGER.getColoredItem(Lasertag.LasertagColor.Green, "§cDisable §nMultiweapons")
                                     : Weapon.DAGGER.getColoredItem(Lasertag.LasertagColor.Red, "§aEnable §nMultiweapons"));
                             session.setWithMultiWeapons(!session.withMultiweapons());
-                        } if(slot == 4){
-                            inv.setItem(4,(!session.withGrenades())? Weapon.GRENADE.getColoredItem(Lasertag.LasertagColor.Green, "§cDisable §nGrenades")
+                        } else if(slot == 3){
+                            inv.setItem(3,(!session.withGrenades())? Weapon.GRENADE.getColoredItem(Lasertag.LasertagColor.Green, "§cDisable §nGrenades")
                                     : Weapon.GRENADE.getColoredItem(Lasertag.LasertagColor.Red, "§aEnable §nGrenades"));
                             session.setWithGrenades(!session.withGrenades());
+                        } else if(slot == 5){
+                            inv.setItem(5,(!session.withPointEvents())?Utils.getItemStack(Material.GREEN_DYE,"§cDisable §nPoint Events")
+                                    : Utils.getItemStack(Material.RED_DYE,"§aEnable §nPoint Events"));
+                            session.setWithPointEvents(!session.withPointEvents());
                         } else if(slot == 7){
-                            inv.setItem(7,(session.withCaptureTheFlag())?Utils.getItemStack(Material.RED_BANNER,"§aEnable §nCapture the Flag")
-                                    : Utils.getItemStack(Material.GREEN_BANNER,"§cDisable §nCapture the Flag"));
+                            inv.setItem(7,(!session.withCaptureTheFlag())?Utils.getItemStack(Material.GREEN_BANNER,"§cDisable §nCapture the Flag")
+                                    : Utils.getItemStack(Material.RED_BANNER,"§aEnable §nCapture the Flag"));
                             session.setWithCaptureTheFlag(!session.withCaptureTheFlag());
                         }
                     }
@@ -255,7 +261,7 @@ public class InventoryListener implements Listener {
     public void onPlayerCloseInventory(InventoryCloseEvent e) {
         try {
             Player p = (Player) e.getPlayer();
-            Inventory inv = e.getInventory();
+            InventoryView view = e.getView();
             Session session = Session.getPlayerSession(p);
             if(session == null) return;
             if(session.tagging()) return;
@@ -265,13 +271,15 @@ public class InventoryListener implements Listener {
                     @Override
                     public void run() {
                         try {
-                            if (inv.getItem(4).getType() == Material.CLOCK) {
+                            if(p.getOpenInventory() != null && p.getOpenInventory().getTitle().equals(view.getTitle())) throw new NullPointerException();
+
+                            if (view.getTitle().equals(Inventories.TIME_INVENTORY_TITLE)) {
                                 if (!session.isTimeSet()) Inventories.openTimeInv(p);
-                            } else if (inv.getItem(4).getType() == Material.PURPLE_STAINED_GLASS_PANE) {
+                            } else if (view.getTitle().equals(Inventories.MAP_INVENTORY_TITLE)) {
                                 if (session.isMapNull()) Inventories.openMapInv(p);
-                            } else if (inv.getItem(4).getType() == Material.LEATHER_CHESTPLATE) {
+                            } else if (view.getTitle().equals(Inventories.TEAMS_INVENTORY_TITLE)) {
                                 if (session.isTeams() && !session.isTeamsAmountSet()) Inventories.openTeamsInv(p);
-                            } else if(inv.getItem(1).getType() == Weapon.SHOTGUN.getType()) {
+                            } else if(view.getTitle().equals(Inventories.SECONDARY_WEAPON_CHOOSER_INVENTORY_TITLE)) {
                                 if(session.withMultiweapons() && !session.isPlayerReady(p)) Inventories.openSecondaryWeaponChooserInv(p);
                             }
                         } catch (NullPointerException ignored){
@@ -280,7 +288,7 @@ public class InventoryListener implements Listener {
                 }.runTaskLater(minigames,5);
             }
 
-            if(inv.contains(Material.LEATHER_CHESTPLATE) && inv.getItem(inv.first(Material.LEATHER_CHESTPLATE)).getItemMeta().getDisplayName().toUpperCase().contains("RED")) {
+            if(e.getInventory().contains(Material.LEATHER_CHESTPLATE) && view.getItem(e.getInventory().first(Material.LEATHER_CHESTPLATE)).getItemMeta().getDisplayName().toUpperCase().contains("RED")) {
                 session.hasTeamChooseInvOpen.remove(p);
             }
         } catch (Exception ignored) {
@@ -298,31 +306,11 @@ public class InventoryListener implements Listener {
             if((e.getAction().equals(Action.RIGHT_CLICK_BLOCK) | e.getAction().equals(Action.RIGHT_CLICK_AIR)) && e.getItem() != null) {
                 ItemStack item = e.getItem();
                 if(item.getType() == Weapon.LASERGUN.getType() && !Lasertag.isPlayerTesting((p))) {
-                    if(session.withMultiweapons() && !session.isEveryBodyReady()) {
-                        Session.sendMessage(p, "§cNot everybody is ready!");
-                        for(Player up : session.getNotReadyPlayers()) {
-                            Inventories.openSecondaryWeaponChooserInv(up);
-                        }
-                    } else {
-                        if(session.getPlayers().length > 1) {
-                            boolean enoughTeams = true;
-                            if(session.isTeams()) {
-                                int teamsWithPlayers = 0;
-                                for(SessionTeam team : session.getTeams()) {
-                                    if(team.getPlayers().length > 0) teamsWithPlayers++;
-                                }
-                                if(teamsWithPlayers < 2) enoughTeams = false;
-                            }
-                            if(enoughTeams && !session.justStopped) {
-                                session.start(true);
-                            }
-                            else Session.sendMessage(p, "§cThere must be at least 2 teams with at least 1 player in it!");
-                        } else Session.sendMessage(p, "§cNot enough players!");
-                    }
+                    session.attemptStart(p);
                 } else if(item.getType() == Material.PAPER) {
                     if(session.votingMap()) {
-                        if(!session.hasPlayerVoted.get(p)) Inventories.openMapVoteInv(p);
-                        else if(session.isAdmin(p)) Inventories.openMapInv(p);
+                        /*if(!session.hasPlayerVoted.get(p))*/ Inventories.openMapVoteInv(p);
+//                        else if(session.isAdmin(p)) Inventories.openMapInv(p);
                     } else if(session.isAdmin(p)) Inventories.openMapInv(p);
                 } else if(item.getType() == Material.LEATHER_CHESTPLATE) {
                     Inventories.openTeamChooseInv(p);

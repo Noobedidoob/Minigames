@@ -332,7 +332,7 @@ public class LaserShooter{
 		switch (w) {
 			case LASERGUN:
 				if(!p.hasCooldown(Weapon.LASERGUN.getType())) {
-					p.setCooldown(Weapon.LASERGUN.getType(), Mod.LASERGUN_COOLDOWN_TICKS.getOgInt());
+					p.setCooldown(Weapon.LASERGUN.getType(), Mod.LASERGUN_NORMAL_COOLDOWN_TICKS.getOgInt());
 					Location startLoc = p.getLocation();
 					startLoc.setY(startLoc.getY()+p.getEyeHeight());
 					p.getWorld().playSound(p.getLocation(), Sound.ENTITY_BLAZE_HURT, 1, 5);
@@ -419,7 +419,7 @@ public class LaserShooter{
 									new BukkitRunnable() {
 										@Override
 										public void run() {
-											p.getInventory().getItem(2).setAmount(Mod.SNIPER_AMMO_BEFORE_COOLDOWN.getOgInt());
+											p.getInventory().getItem(2).setAmount(Mod.SNIPER_AMMO.getOgInt());
 										}
 									}.runTaskLater(Minigames.INSTANCE, Mod.SNIPER_COOLDOWN_TICKS.getOgInt());
 								}

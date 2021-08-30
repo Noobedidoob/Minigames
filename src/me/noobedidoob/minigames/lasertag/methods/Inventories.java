@@ -15,10 +15,10 @@ import org.bukkit.inventory.ItemStack;
 
 public class Inventories implements Listener{
 	
-	private static ItemStack getAdditionItem(String displayName) {
+	public static ItemStack getAdditionItem(String displayName) {
 		return Utils.getItemStack(Material.LIME_STAINED_GLASS_PANE, displayName);
 	}
-	private static ItemStack getSubtractionItem(String displayName) {
+	public static ItemStack getSubtractionItem(String displayName) {
 		return Utils.getItemStack(Material.RED_STAINED_GLASS_PANE, displayName);
 	}
 
@@ -66,7 +66,7 @@ public class Inventories implements Listener{
 		
 		int i = 9;
 		for(Map m : Map.MAPS) {
-			if(session.isMapPlayable(m) && !m.isUsed()) {
+			if(session.isMapPlayable(m)) {
 				inv.setItem(i++, Utils.getItemStack(Material.FILLED_MAP, "§r§b"+m.getName()));
 			}
 		}
@@ -77,18 +77,21 @@ public class Inventories implements Listener{
 
 	public static final String TEAMS_INVENTORY_TITLE = "§5Set amount of teams";
 	public static void openTeamsInv(Player p) {
+		if(!Session.isPlayerInSession(p)) return;
+		openTeamsInv(p, Session.getPlayerSession(p).getTeamsAmount());
+	}
+	public static void openTeamsInv(Player p, int teamAmount) {
+		if(!Session.isPlayerInSession(p)) return;
 		Inventory inv = Bukkit.createInventory(null, 9, TEAMS_INVENTORY_TITLE);
 		
-		if(Session.isPlayerInSession(p) && Session.getPlayerSession(p).getTeamsAmount() == 2) {
-
-			inv.setItem(4, Utils.getItemStack(Material.BARRIER, "§cNo Teams -> §7(§bSOLO§7)"));
+		if(teamAmount < 2) {
+			inv.setItem(4, Utils.getItemStack(Material.BARRIER, "§cSolo"));
 		} else {
-
-			inv.setItem(4, Utils.getLeatherArmorItem(Material.LEATHER_CHESTPLATE, "§aTeams: §b2", LasertagColor.Red.getColor(), 2));
+			inv.setItem(4, Utils.getLeatherArmorItem(Material.LEATHER_CHESTPLATE, "§aTeams: §b"+teamAmount, LasertagColor.Red.getColor(), teamAmount));
 		}
+
 		
-		
-		
+
 		inv.setItem(2, getSubtractionItem("§c§l-1 §r§bTeam"));
 		inv.setItem(6, getAdditionItem("§a§l+1 §r§bTeam"));
 		inv.setItem(8, Weapon.LASERGUN.getItem("§aNext"));
@@ -149,8 +152,8 @@ public class Inventories implements Listener{
 		
 		int i = 0;
 		for(Map m : Map.MAPS) {
-			if(session.isMapPlayable(m) && !m.isUsed()) {
-				inv.setItem(i++, Utils.getItemStack(Material.FILLED_MAP,m.getName()+" §7(§a"+ ((session.mapVotes.get(m) != null)?session.mapVotes.get(m):0)+"§7)"));
+			if(session.isMapPlayable(m)) {
+				inv.setItem(i++, Utils.getItemStack(Material.FILLED_MAP,m.getName()+" §7(§a"+ ((session.getMapVotes().get(m) != null)?session.getMapVotes().get(m):0)+"§7)"));
 			}
 		}
 		
@@ -216,8 +219,10 @@ public class Inventories implements Listener{
 
 		inv.setItem(1,(session.withMultiweapons())?Weapon.DAGGER.getColoredItem(LasertagColor.Green, "§cDisable §nMultiweapons")
 				: Weapon.DAGGER.getColoredItem(LasertagColor.Red,"§aEnable §nMultiweapons"));
-		inv.setItem(4,(session.withGrenades())? Weapon.GRENADE.getColoredItem(LasertagColor.Green, "§cDisable §nGrenades")
+		inv.setItem(3,(session.withGrenades())? Weapon.GRENADE.getColoredItem(LasertagColor.Green, "§cDisable §nGrenades")
 				: Weapon.GRENADE.getColoredItem(LasertagColor.Red, "§aEnable §nGrenades"));
+		inv.setItem(5,(session.withPointEvents())? Utils.getItemStack(Material.GREEN_DYE,"§cDisable §nPoint Events")
+				: Utils.getItemStack(Material.RED_DYE,"§aEnable §nPoint Events"));
 		inv.setItem(7,(session.withCaptureTheFlag())? Utils.getItemStack(Material.GREEN_BANNER,"§cDisable §nCapture the Flag")
 				: Utils.getItemStack(Material.RED_BANNER,"§aEnable §nCapture the Flag"));
 		p.closeInventory();
