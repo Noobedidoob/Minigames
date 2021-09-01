@@ -26,18 +26,21 @@ public class JoinQuitListener implements Listener {
 	public void onPlayerQuit(PlayerQuitEvent e) {
 		Player p = e.getPlayer();
 		Session session = Session.getPlayerSession(p);
-		if(session == null) return;
-		
-		session.disconnectPlayer(p);
-		e.setQuitMessage("");
-		for(Player op : Bukkit.getOnlinePlayers()) {
-			if(!session.isInSession(op)) {
-				op.sendMessage("§e"+p.getName()+" left");
+		if(session == null) {
+			for (Session s : Session.getAllSessions()) {
+				if(s.invitedPlayers.contains(p)) session.invitedPlayers.remove(p);
 			}
+		} else {
+			session.disconnectPlayer(p);
+			e.setQuitMessage("");
+			for(Player op : Bukkit.getOnlinePlayers()) {
+				if(!session.isInSession(op)) {
+					op.sendMessage("§e"+p.getName()+" left");
+				}
+			}
+			PlayerZoomer.zoomPlayerOut(p);
 		}
-		
-		PlayerZoomer.zoomPlayerOut(p);
-		
+
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH)

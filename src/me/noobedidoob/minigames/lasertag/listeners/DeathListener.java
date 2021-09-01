@@ -42,7 +42,7 @@ public class DeathListener implements Listener {
 		if (victim.getGameMode() == GameMode.ADVENTURE) {
 			if (damage < victim.getHealth()) {
 				if(headshot) damage *= session.getDoubleMod(Mod.HEADSHOT_DAMAGE_MULTILIER);
-				if(snipe) damage *= session.getDoubleMod(Mod.SNIPER_SHOT_DAMAGE_MULTIPLIER);
+				if(snipe) damage *= session.getDoubleMod(Mod.SNIPE_SHOT_DAMAGE_MULTIPLIER);
 				victim.damage(damage);
 				if(type == HitType.SHOT | type == HitType.GRENADE) killer.playSound(killer.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1f, 0);
 				return false;

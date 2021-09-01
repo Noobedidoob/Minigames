@@ -66,7 +66,7 @@ public class SessionRound {
 			@Override
 			public void run() {
 				if(session.getTime(TimeFormat.SECONDS) > 0) {
-					if(session.getTime(TimeFormat.SECONDS) <= 5 && session.getTime(TimeFormat.SECONDS) > 0) {
+					if(session.getTime(TimeFormat.SECONDS) <= 10 && session.getTime(TimeFormat.SECONDS) > 0) {
 						for(Player p : session.getPlayers()) {
 							p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 2, 0.529732f);
 							p.sendTitle("§c"+session.getTime(TimeFormat.SECONDS), "", 0, 21, 5);

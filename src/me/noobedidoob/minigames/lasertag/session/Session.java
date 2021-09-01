@@ -38,27 +38,7 @@ public class Session implements Listener{
 	private String code;
 	
 	public final Minigames minigames;
-	public Session(Minigames minigames, Player owner, boolean solo) {
-		this.minigames = minigames;
-		scoreboard = new SessionScoreboard(this);
-		round = new SessionRound(this);
-		modifiers = new SessionModifiers();
-		
-		this.solo = solo;
-		
-		this.owner = owner;
-		addPlayer(owner);
-		addAdmin(owner);
-		this.code = owner.getName();
-		NAME_SESSION.put(code, this);
-		
-		Inventories.openTimeInv(owner);
-		SESSIONS.add(this);
-		
-		for(Map m : Map.MAPS) getMapVotes().put(m, 0);
-		
-	}
-	public Session(Minigames minigames, Player owner, int teamsAmount) {
+	public Session(Minigames minigames, Player owner, int teamsAmount, boolean openInv) {
 		this.minigames = minigames;
 		scoreboard = new SessionScoreboard(this);
 		round = new SessionRound(this);
@@ -79,8 +59,9 @@ public class Session implements Listener{
 		addAdmin(owner);
 		this.code = owner.getName();
 		NAME_SESSION.put(code, this);
+		this.pointEvents = new PointEvents(this);
 		
-		Inventories.openTimeInv(owner);
+		if(openInv) Inventories.openTimeInv(owner);
 		SESSIONS.add(this);
 		
 		for(Map m : Map.MAPS) getMapVotes().put(m, 0);
@@ -106,7 +87,6 @@ public class Session implements Listener{
 									Bukkit.getScheduler().scheduleSyncDelayedTask(minigames, () -> {
 										round.start();
 										if(withEvents) pointEvents.startEvents();
-										System.out.println("starting "+withEvents);
 									}, 20);
 								}, 20);
 							}, 20);
@@ -252,8 +232,8 @@ public class Session implements Listener{
 
 	public HashMap<Player, Map> playerVotes = new HashMap<>();
 	public void playerVoteMap(Player p, Map m) {
+		broadcast(getPlayerColor(p).getChatColor()+p.getName()+" §a"+(playerVotes.get(p) != null ? "revoted" : "voted")+" for §b"+m.getName());
 		playerVotes.put(p, m);
-		getMapVotes().put(m, getMapVotes().get(m)+1);
 		refreshScoreboard();
 	}
 	public HashMap<Map, Integer> getMapVotes(){
@@ -367,8 +347,8 @@ public class Session implements Listener{
 		timeSet = true;
 		scoreboard.refresh();
 		if(announce) {
-			if(format == TimeFormat.HOURS) broadcast("§aSession time was set to §b"+Utils.getTimeFormatFromLong(this.time, TimeFormat.HOURS)+" §ehours");
-			else if(format == TimeFormat.MINUTES) broadcast("§aRound time was set to §b"+Utils.getTimeFormatFromLong(this.time, TimeFormat.MINUTES)+" §eminutes");
+			if(format == TimeFormat.HOURS) broadcast("§aSession time was set to §b"+Utils.getTimeFormatFromLongSmooth(this.time, TimeFormat.HOURS)+" §ehours");
+			else if(format == TimeFormat.MINUTES) broadcast("§aRound time was set to §b"+Utils.getTimeFormatFromLongSmooth(this.time, TimeFormat.MINUTES)+" §eminutes");
 			else broadcast("§aRound time was set to §b"+this.time+" §eseconds");
 		}
 	}
@@ -391,6 +371,7 @@ public class Session implements Listener{
 	
 
 	public List<Player> bannedPlayers = new ArrayList<>();
+	public List<Player> invitedPlayers = new ArrayList<>();
 	@SuppressWarnings("deprecation")
 	public void sendInvitation(Player p) {
 		sendMessage(p, "§eYou've been invited to the session of §b"+owner.getName());
@@ -402,6 +383,8 @@ public class Session implements Listener{
 		
 		p.spigot().sendMessage(linkMsg);
 		bannedPlayers.remove(p);
+		invitedPlayers.add(p);
+		Utils.runLater(()->invitedPlayers.remove(p), 20*30);
 	}
 	public boolean isPlayerBanned(Player p) {
 		return bannedPlayers.contains(p);
@@ -478,8 +461,6 @@ public class Session implements Listener{
 	private boolean withEvents = false;
 	public void setWithPointEvents(boolean withPointEvents){
 		if(withEvents == withPointEvents) return;
-		if(pointEvents == null) pointEvents = new PointEvents(this);
-		pointEvents.setEnabled(withPointEvents);
 		broadcast(((withPointEvents)?"§aEnabled":"§cDisabled")+" §bpoint events");
 		this.withEvents = withPointEvents;
 		refreshScoreboard();
@@ -851,8 +832,7 @@ public class Session implements Listener{
 				}
 				if(enoughTeams && !justStopped) {
 					start(true);
-				}
-				else Session.sendMessage(p, "§cThere must be at least 2 teams with at least 1 player in it!");
+				} else Session.sendMessage(p, (!enoughTeams) ? "§cThere must be at least 2 teams with at least 1 player in it!" : "§cYou have to wait some seconds before you can start a new game");
 			} else Session.sendMessage(p, "§cNot enough players!");
 		}
 	}
@@ -925,15 +905,13 @@ public class Session implements Listener{
     
     public void setMod(Mod m, Object value) {
     	modifiers.set(m, value);
-    	broadcast("§aThe modifier §b"+m.name().toLowerCase()+" §a was set to §e"+value.toString());
+    	broadcast("§aThe modifier §b"+m.getCommand()+" §a was set to §e"+value.toString());
     }
-
-    public void resetMod(Mod m){
-		if(modifiers.get(m) != m.getOg()) broadcast("§aThe modifier §b"+m.name().toLowerCase()+" §a was resetset to §e"+m.getOg());
-		modifiers.set(m, m.getOg());
+    public void setModSilent(Mod m, Object value) {
+		modifiers.set(m, value);
 	}
-    
-    
+
+
     
     private boolean withMultiWeapons = false;
     public boolean withMultiweapons() {

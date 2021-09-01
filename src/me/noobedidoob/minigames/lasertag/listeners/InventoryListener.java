@@ -90,8 +90,8 @@ public class InventoryListener implements Listener {
                     } else if(slot == 8 && inv.getItem(8).getType() == Weapon.LASERGUN.getType()) {
                         if(inv.getItem(4).getAmount() < 2) Session.sendMessage(p, "§aCreated a new solo session!");
                         else Session.sendMessage(p, "§aCreated a new teams session with §d"+inv.getItem(4).getAmount()+" §ateams!");
-                        new Session(minigames, p, inv.getItem(4).getAmount());
                         p.closeInventory();
+                        new Session(minigames, p, inv.getItem(4).getAmount(), true);
                     }
                 }
             } else {
@@ -160,25 +160,22 @@ public class InventoryListener implements Listener {
                     }
 
 
-                    else if(view.getTitle().equals(Inventories.ADD_ADMIN_INVENTORY_TITLE)) {
+                    else if(view.getTitle().equals(Inventories.INVITE_PLAYERS_INVENTORY_TITLE)) {
                         if(slot == 4) {
-                            boolean doNonAdminsExist = true;
-                            for(Player ap : session.getPlayers()) {
-                                if(!session.isAdmin(ap)) {
-                                    doNonAdminsExist = false;
-                                    session.addAdmin(ap);
+                            for(Player ap : Bukkit.getOnlinePlayers()) {
+                                if(!session.isInSession(ap)) {
+                                    session.sendInvitation(ap);
                                 }
                             }
-                            if(doNonAdminsExist) {
-                                p.closeInventory();
-                                Session.sendMessage(p, "§aEverybody is an §badmin §anow!");
-                                session.broadcast("§d" + p.getName() + " §amade everybody an §badmin§a!", p);
-                            }
+                            p.closeInventory();
+                            Session.sendMessage(p, "§aSent invitation to everybody!");
                         } else if(slot > 8) {
                             Player ap = Bukkit.getPlayer(inv.getItem(slot).getItemMeta().getDisplayName().substring(2));
-                            if(session.isInSession(ap) && !session.isAdmin(ap)) {
-                                session.addAdmin(ap);
-                                Session.sendMessage(p, "§aMade §b"+ap.getName()+" §aan §eadmin");
+                            if(ap != null){
+                                if(!session.isInSession(ap)) {
+                                    session.sendInvitation(ap);
+                                    Session.sendMessage(p, "§b"+ap.getName()+"§a has been invited");
+                                }
                             }
                             inv.setItem(slot, new ItemStack(Material.AIR));
                         }
@@ -229,7 +226,8 @@ public class InventoryListener implements Listener {
                 else if(session.votingMap() && view.getTitle().equals(Inventories.MAP_VOTE_INVENTORY_TITLE)) {
                     session.playerVoteMap(p, Map.getMapByName(inv.getItem(slot).getItemMeta().getDisplayName().toLowerCase().substring(0, inv.getItem(slot).getItemMeta().getDisplayName().length()-10)));
                     p.closeInventory();
-                    p.getInventory().getItem(p.getInventory().first(Material.PAPER)).getItemMeta().setDisplayName("§eVoted for: §d"+Map.MAPS.get(slot).getName());
+//                    p.getInventory().getItem(p.getInventory().first(Material.PAPER)).getItemMeta().setDisplayName("§eVoted for: §d"+Map.MAPS.get(slot).getName());
+                    Inventories.setPlayerSessionWaitingInv(p);
                 }
 
                 if(view.getTitle().equals(Inventories.SECONDARY_WEAPON_CHOOSER_INVENTORY_TITLE)){
@@ -303,8 +301,8 @@ public class InventoryListener implements Listener {
         if(session == null) return;
         if(session.tagging()) return;
         if(session.waiting()) {
-            if((e.getAction().equals(Action.RIGHT_CLICK_BLOCK) | e.getAction().equals(Action.RIGHT_CLICK_AIR)) && e.getItem() != null) {
-                ItemStack item = e.getItem();
+            ItemStack item = e.getItem();
+            if((e.getAction().equals(Action.RIGHT_CLICK_BLOCK) | e.getAction().equals(Action.RIGHT_CLICK_AIR)) && item != null) {
                 if(item.getType() == Weapon.LASERGUN.getType() && !Lasertag.isPlayerTesting((p))) {
                     session.attemptStart(p);
                 } else if(item.getType() == Material.PAPER) {
@@ -316,9 +314,9 @@ public class InventoryListener implements Listener {
                     Inventories.openTeamChooseInv(p);
                 } else if(item.getType() == Material.END_CRYSTAL) {
                     Inventories.openTeamsInv(p);
-                } else if(item.getType() == Material.DIAMOND_HELMET) {
-                    if(session.getPlayers().length > 1 && session.getAdmins().length < session.getPlayers().length) Inventories.openAddAdminInv(p);
-                    else Session.sendMessage(p,"§cThere are no players to promote!");
+                } else if(item.getType() == Material.PLAYER_HEAD) {
+                    if(Bukkit.getOnlinePlayers().size() > 1 && Bukkit.getOnlinePlayers().size() > session.getPlayers().length) Inventories.openInviteInv(p);
+                    else Session.sendMessage(p,"§cThere are no players to invite!");
                 } else if(item.getType() == Material.CLOCK) {
                     Inventories.openTimeInv(p);
                 } else if(item.getType() == Material.BARRIER) {
@@ -327,6 +325,12 @@ public class InventoryListener implements Listener {
                     Inventories.openSecondaryWeaponChooserInv(p);
                 } else if(item.getType().equals(Material.REDSTONE_TORCH)) {
                     Inventories.openExtraModesInv(p);
+                }
+            } else if((e.getAction().equals(Action.LEFT_CLICK_BLOCK) | e.getAction().equals(Action.LEFT_CLICK_AIR)) && item != null){
+                if(item.getType() == Material.PAPER) {
+                    if(session.votingMap()) {
+                        Inventories.openMapInv(p);
+                    }
                 }
             }
         }

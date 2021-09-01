@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import me.noobedidoob.minigames.Commands;
+import me.noobedidoob.minigames.utils.Map;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -56,11 +57,17 @@ public class SessionCommands implements CommandExecutor, TabCompleter{
 		if(sender instanceof Player){
 			Player p = (Player) sender;
 			Session s = Session.getPlayerSession(p);
-
 			if (args.length == 1) {
 				if(s == null) {
 					if (args[0].equalsIgnoreCase("new")) {
 						Inventories.openNewSessionInv(p);
+						return true;
+					}
+					if (args[0].equalsIgnoreCase("quickNew")) {
+						Session.sendMessage(p, "§aRegistered new Session!");
+						Session session = new Session(minigames, p, 0, false);
+						session.setTime(5, TimeFormat.MINUTES, false);
+						session.setMap(Map.MAPS.get(0));
 						return true;
 					}
 				} else {
@@ -112,7 +119,7 @@ public class SessionCommands implements CommandExecutor, TabCompleter{
 					else if(args[0].equalsIgnoreCase("addAdmin") | args[0].equalsIgnoreCase("setAdmin")) {
 						if(s.isAdmin(p)) {
 							if (!s.tagging()) {
-								Inventories.openAddAdminInv(p);
+								Inventories.openInviteInv(p);
 							} else Session.sendMessage(p, "§cYou can't promote players while the game is running!");
 						} else Session.sendMessage(p, "§cYou have to be an admin of this session to perform this command!");
 						return true;
@@ -152,7 +159,7 @@ public class SessionCommands implements CommandExecutor, TabCompleter{
 							return true;
 						}
 						Session.sendMessage(p, "§aRegistered new Session!");
-						new Session(minigames, p, (!args[1].equalsIgnoreCase("teams")));
+						new Session(minigames, p, (args[1].equalsIgnoreCase("teams") ? 2 : 1), true);
 						return true;
 					}
 				} 
@@ -195,10 +202,8 @@ public class SessionCommands implements CommandExecutor, TabCompleter{
 							if(ap != null) {
 								if (s.isInSession(ap)) {
 									if (!s.isAdmin(ap)) {
-										if (!s.tagging()) {
-											s.addAdmin(ap);
-											Session.sendMessage(p, "§aPromoted §b"+ap.getName()+" §ato Admin!");
-										} else Session.sendMessage(p, "§cYou can't demote players while the game is running!");
+										s.addAdmin(ap);
+										Session.sendMessage(p, "§aPromoted §b"+ap.getName()+" §ato Admin!");
 									} else Session.sendMessage(p, "§b"+args[1]+" §cis already an admin of this session!");
 								} else Session.sendMessage(p, "§b"+args[1]+" §cis not in this session!");
 							} else Session.sendMessage(p, "§cPlayer §b"+args[1]+" §cnot found!");
@@ -215,10 +220,8 @@ public class SessionCommands implements CommandExecutor, TabCompleter{
 								if (s.isInSession(dp)) {
 									if (s.isAdmin(dp)) {
 										if(dp != s.getOwner()) {
-											if (!s.tagging()) {
-												s.removeAdmin(dp);
-												Session.sendMessage(p, "§aDemoted §b"+dp.getName()+" §afrom Admin!");
-											} else Session.sendMessage(p, "§cYou can't demote players while the game is running!");
+											s.removeAdmin(dp);
+											Session.sendMessage(p, "§aDemoted §b"+dp.getName()+" §afrom Admin!");
 										} else Session.sendMessage(p, "§cYou can't do this to the owner!");
 									} else Session.sendMessage(p, "§b"+args[1]+" §cis not an admin of this session!");
 								} else Session.sendMessage(p, "§b"+args[1]+" §cis not in this session!");
@@ -233,12 +236,29 @@ public class SessionCommands implements CommandExecutor, TabCompleter{
 						if(s.isAdmin(p)) {
 							Player ip = Bukkit.getPlayer(args[1]);
 							if(ip != null) {
-								if (Session.getPlayerSession(ip) == null) {
-									s.sendInvitation(ip);
-									Session.sendMessage(p, "§aInvitation sent!");
+								if (!s.isInSession(ip)) {
+									if(!s.invitedPlayers.contains(ip)){
+										s.sendInvitation(ip);
+										Session.sendMessage(p, "§aInvitation sent!");
+									} else Session.sendMessage(p, "§cYou have to wait some seconds before you can invite §b"+ip.getName()+" §cagain!");
 								} else Session.sendMessage(p, "§b"+args[1]+" §cis already in a session!");
 							} else Session.sendMessage(p, "§cPlayer §b"+args[1]+" §cnot found!");
 						} else Session.sendMessage(p, "§cYou have to be an admin of this session to perform this command!");
+					} else Session.sendMessage(p, "§cYou're not in a session!");
+					return true;
+				}
+				else if(args[0].equalsIgnoreCase("forceInvite")) {
+					if(s != null) {
+						if(p.isOp()) {
+							if(s.isAdmin(p)) {
+								Player ip = Bukkit.getPlayer(args[1]);
+								if(ip != null) {
+									if (Session.getPlayerSession(ip) == null) {
+										s.addPlayer(ip);
+									} else Session.sendMessage(p, "§b"+args[1]+" §cis already in a session!");
+								} else Session.sendMessage(p, "§cPlayer §b"+args[1]+" §cnot found!");
+							} else Session.sendMessage(p, "§cYou have to be an admin of this session to perform this command!");
+						} else Session.sendMessage(p, "§cYou have to be a server operator to perform this command!");
 					} else Session.sendMessage(p, "§cYou're not in a session!");
 					return true;
 				}
@@ -246,16 +266,18 @@ public class SessionCommands implements CommandExecutor, TabCompleter{
 				else if(args[0].equalsIgnoreCase("setTeams")) {
 					if(s != null) {
 						if(s.isAdmin(p)) {
-							try {
-								int amount = Integer.parseInt(args[1]);
-								if(amount > 1) {
-									s.setTeamsAmount(amount);
-								} else {
-									Session.sendMessage(p, "§cYou have to give a valid number (minimum of 2)!");
+							if (!s.tagging()) {
+								try {
+									int amount = Integer.parseInt(args[1]);
+									if(amount > 1) {
+										s.setTeamsAmount(amount);
+									} else {
+										Session.sendMessage(p, "§cYou have to give a valid number (minimum of 2)!");
+									}
+								} catch (NumberFormatException e) {
+									Session.sendMessage(p, "§cYou have to give a valid number!");
 								}
-							} catch (NumberFormatException e) {
-								Session.sendMessage(p, "§cYou have to give a valid number!");
-							}
+							} else Session.sendMessage(p, "§cYou cant change the amount of teams while the game is running");
 						} else Session.sendMessage(p, "§cYou have to be an admin of this session to perform this command!");
 					} else Session.sendMessage(p, "§cYou're not in a session!");
 					return true;
@@ -271,7 +293,7 @@ public class SessionCommands implements CommandExecutor, TabCompleter{
 								} catch (NumberFormatException e) {
 									Session.sendMessage(p, "§cYou have to give a valid number!");
 								}
-							} else Session.sendMessage(p, "§cYou can't perform this command in a running round!");
+							} else Session.sendMessage(p, "§cYou can't perform this command in a running game!");
 						} else Session.sendMessage(p, "§cYou have to be an admin of this session to perform this command!");
 					} else Session.sendMessage(p, "§cYou're not in a session!");
 					return true;
@@ -282,7 +304,7 @@ public class SessionCommands implements CommandExecutor, TabCompleter{
 						if (s.isAdmin(p)) {
 							if (s.waiting()) {
 								s.setWithMultiWeapons(Boolean.parseBoolean(args[1]));
-							} else Session.sendMessage(p, "§cYou can't perform this command in a running round!");
+							} else Session.sendMessage(p, "§cYou can't perform this command in a running game!");
 						} else Session.sendMessage(p,"§cYou have to be an admin of this session to perform this command!");
 					} else Session.sendMessage(p, "§cYou're not in a session!");
 					return true;
@@ -293,7 +315,7 @@ public class SessionCommands implements CommandExecutor, TabCompleter{
 						if (s.isAdmin(p)) {
 							if (s.waiting()) {
 								s.setWithCaptureTheFlag(Boolean.parseBoolean(args[1]));
-							} else Session.sendMessage(p, "§cYou can't perform this command in a running round!");
+							} else Session.sendMessage(p, "§cYou can't perform this command in a running game!");
 						} else Session.sendMessage(p,"§cYou have to be an admin of this session to perform this command!");
 					} else Session.sendMessage(p, "§cYou're not in a session!");
 					return true;
@@ -336,12 +358,14 @@ public class SessionCommands implements CommandExecutor, TabCompleter{
 		if(args.length == 1) {
 			if(s == null) {
 				list.add("new");
+				list.add("quickNew");
 				list.add("join");
 			} else {
 				if(s.isAdmin(p)) {
 					if(!s.tagging()) {
 						list.add("start");
 						list.add("invite");
+						if(p.isOp()) list.add("forceInvite");
 						list.add("addAdmin");
 						list.add("removeAdmin");
 						list.add("setSolo");
@@ -371,11 +395,11 @@ public class SessionCommands implements CommandExecutor, TabCompleter{
 					}
 				}
 			} else if(s.isAdmin(p)){
-				if(args[0].equalsIgnoreCase("addAdmin") | args[0].equalsIgnoreCase("setAdmin")) {
+				if((args[0].equalsIgnoreCase("addAdmin") | args[0].equalsIgnoreCase("setAdmin")) && !s.tagging()) {
 					for(Player ap : s.getPlayers()) {
 						if(!s.isAdmin(ap) && ap != p && ap.getName().toLowerCase().contains(args[1].toLowerCase())) list.add(ap.getName());
 					}
-				} else if(args[0].equalsIgnoreCase("removeAdmin") | args[0].equalsIgnoreCase("demoteAdmin")) {
+				} else if((args[0].equalsIgnoreCase("removeAdmin") | args[0].equalsIgnoreCase("demoteAdmin")) && !s.tagging()) {
 					for(Player ap : s.getPlayers()) {
 						if(s.isAdmin(ap) && ap != p && ap.getName().toLowerCase().contains(args[1].toLowerCase())) list.add(ap.getName());
 					}
@@ -383,13 +407,17 @@ public class SessionCommands implements CommandExecutor, TabCompleter{
 					for(Player ap : s.getPlayers()) {
 						if(ap != s.getOwner() && ap != p && ap.getName().toLowerCase().contains(args[1].toLowerCase())) list.add(ap.getName());
 					}
-				} else if(args[0].equalsIgnoreCase("invite")) {
+				} else if(args[0].equalsIgnoreCase("invite") && !s.tagging()) {
 					for(Player op : Bukkit.getOnlinePlayers()) {
-						if(Session.getPlayerSession(op) == null && op.getName().toLowerCase().contains(args[1].toLowerCase())) list.add(op.getName());
+						if(!s.isInSession(op) && op.getName().toLowerCase().contains(args[1].toLowerCase())) list.add(op.getName());
+					}
+				} else if(args[0].equalsIgnoreCase("forceInvite") && !s.tagging() && p.isOp()) {
+					for(Player op : Bukkit.getOnlinePlayers()) {
+						if(!s.isInSession(op) && op.getName().toLowerCase().contains(args[1].toLowerCase())) list.add(op.getName());
 					}
 				}
 
-				else if(args[0].toLowerCase().startsWith("setwith")){
+				else if(args[0].toLowerCase().startsWith("setwith") && !s.tagging()){
 					list.add("true");
 					list.add("false");
 				}

@@ -95,6 +95,10 @@ public enum Weapon {
 		return null;
 	}
 
+	public static String[] getMultiWeaponNames(){
+		return new String[] {"SHOTGUN", "SNIPER", "DAGGER"};
+	}
+
 	public boolean isWeapon(ItemStack item){
 		if(item == null) return false;
 		return item.getType() == material && item.getItemMeta().getDisplayName().contains(this.item.getItemMeta().getDisplayName().substring(3));

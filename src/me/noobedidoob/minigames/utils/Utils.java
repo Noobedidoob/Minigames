@@ -154,6 +154,17 @@ public class Utils {
 		dateFormat.setTimeZone(tz);
 		return dateFormat.format(new Date(millis));
 	}
+	public static String getTimeFormatFromLongSmooth(long seconds, TimeFormat type) {
+		long millis = seconds*1000;
+		SimpleDateFormat dateFormat = new SimpleDateFormat("mm:ss");
+		if(type == TimeFormat.HOURS) dateFormat = new SimpleDateFormat("HH:mm:ss");
+		else if(type == TimeFormat.SECONDS) dateFormat = new SimpleDateFormat("ss");
+		TimeZone tz = TimeZone.getTimeZone("MESZ");
+		dateFormat.setTimeZone(tz);
+		String time = dateFormat.format(new Date(millis));
+		if((type == TimeFormat.HOURS && seconds < 10*60*60) | (type == TimeFormat.MINUTES && seconds < 10*60) | (type == TimeFormat.SECONDS && seconds < 10)) time = time.substring(1);
+		return time;
+	}
 
 	public enum TimeFormat{
 		SECONDS,
@@ -171,12 +182,7 @@ public class Utils {
 		}
 	}
 
-	public static boolean contains(String string, String... strings) {
-		for(String s : strings) {
-			if(string.toUpperCase().contains(s.toUpperCase())) return true;
-		}
-		return false;
-	}
+
 
 	public static boolean isBetween(double min, double value, double max) {
 		return value < max && value > min;
@@ -257,6 +263,19 @@ public class Utils {
 			if(v) i++;
 		}
 		return i;
+	}
+
+	public static boolean containsKey(String s, String... keys){
+		for(String key : keys){
+			if(s.contains(key)) return true;
+		}
+		return false;
+	}
+	public static boolean containsKeyIgnoreCase(String s, String... keys) {
+		for(String key : keys) {
+			if(s.toUpperCase().contains(key.toUpperCase())) return true;
+		}
+		return false;
 	}
 
 }

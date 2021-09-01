@@ -107,8 +107,8 @@ public class Inventories implements Listener{
 			p.getInventory().setItem(i, new ItemStack(Material.AIR));
 		}
 
-		String mapTitle = (!session.votingMap() && session.getMap() != null)? "§eMap: §b"+session.getMap().getName() : "§eVote map";
-		if(session.isAdmin(p)) mapTitle += " §o§7[§6Click to change§7]";
+		String mapTitle = (!session.votingMap() && session.getMap() != null)? "§eMap: §b"+session.getMap().getName() : (session.playerVotes.get(p) != null ? "§eVoted for: §b"+session.playerVotes.get(p).getName() : "§eVote map");
+		if(session.isAdmin(p) && session.votingMap()) mapTitle += " §o§7[§6Left-Click to change§7]";
 		ItemStack map = /*new ItemStack(Material.PAPER);*/ Utils.getItemStack(Material.PAPER, mapTitle);
 
 
@@ -133,11 +133,13 @@ public class Inventories implements Listener{
 		}
 		if(session.isAdmin(p)) {
 			if(session.withMultiweapons()) addon++;
+			if(6+addon >= 7) addon--;
+
 			p.getInventory().setItem(0, Weapon.LASERGUN.getItem("§a§lSTART"));
 			p.getInventory().setItem(3+addon, Utils.getItemStack(Material.CLOCK,"§bChange time"));
 			p.getInventory().setItem(4+addon, Utils.getItemStack(Material.REDSTONE_TORCH,"§dExtra modes"));
 			p.getInventory().setItem(5+addon, Utils.getItemStack(Material.END_CRYSTAL,"§6Change mode"));
-			p.getInventory().setItem(6+addon, Utils.getItemStack(Material.DIAMOND_HELMET,"§ePromote player to admin"));
+			p.getInventory().setItem(6+addon, Utils.getItemStack(Material.PLAYER_HEAD,"§eInvite players"));
 		}
 
 		p.getInventory().setItem(8, Utils.getItemStack(Material.BARRIER,"§cLeave"));
@@ -175,19 +177,19 @@ public class Inventories implements Listener{
 		p.openInventory(inv);
 	}
 
-	public static final String ADD_ADMIN_INVENTORY_TITLE = "§1Choose a new admin:";
-	public static void openAddAdminInv(Player p) {
+	public static final String INVITE_PLAYERS_INVENTORY_TITLE = "§1Choose players to invite:";
+	public static void openInviteInv(Player p) {
 		Session session = Session.getPlayerSession(p);
 		if(session == null) return;
 		
-		Inventory inv = Bukkit.createInventory(null, 9+(9*((session.getPlayers().length-session.getAdmins().length-1)/9+1)), ADD_ADMIN_INVENTORY_TITLE);
+		Inventory inv = Bukkit.createInventory(null, 9+(9*((session.getPlayers().length-session.getAdmins().length-1)/9+1)), INVITE_PLAYERS_INVENTORY_TITLE);
 
-		inv.setItem(4, Utils.getItemStack(Material.BLUE_STAINED_GLASS_PANE, "§aMake everyone an admin"));
+		inv.setItem(4, Utils.getItemStack(Material.BLUE_STAINED_GLASS_PANE, "§aInvite everyone"));
 		
 		int i = 9;
-		for(Player op : session.getPlayers()) {
-			if (p != op && !session.isAdmin(op)) {
-				inv.setItem(i++, Utils.getPlayerSkullItem(op,"§b"+op.getName()));
+		for(Player op : Bukkit.getOnlinePlayers()) {
+			if (op != p && !session.isInSession(op) && !session.invitedPlayers.contains(op)) {
+				inv.setItem(i++, Utils.getPlayerSkullItem(op,(Session.getPlayerSession(op) == null ? "§a" : "§c")+op.getName()));
 			}
 		}
 		

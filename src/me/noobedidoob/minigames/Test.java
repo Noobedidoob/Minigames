@@ -3,6 +3,7 @@ package me.noobedidoob.minigames;
 import me.noobedidoob.minigames.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -10,12 +11,19 @@ import org.bukkit.boss.BossBar;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class Test implements CommandExecutor, Listener {
 
@@ -43,8 +51,25 @@ public class Test implements CommandExecutor, Listener {
             }
         }.runTaskTimer(Minigames.INSTANCE, 1, 1);
     }
+    List<Player> players = new ArrayList<>();
     public void test2(Player p){
-        p.sendMessage(p.getInventory().contains(Material.DIAMOND)+"");
+        if(players.contains(p)){
+            players.remove(p);
+            System.out.println("removed");
+        } else {
+            players.add(p);
+            System.out.println("added");
+        }
+    }
+
+    @EventHandler
+    public void onPlayerMove(PlayerMoveEvent e){
+        Player p = e.getPlayer();
+        if(players.contains(p)){
+            Location loc = e.getTo().clone();
+            loc.setPitch(0);
+            e.setTo(loc);
+        }
     }
 
 

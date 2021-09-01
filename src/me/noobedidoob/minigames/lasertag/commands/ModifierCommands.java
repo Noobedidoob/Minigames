@@ -2,7 +2,6 @@ package me.noobedidoob.minigames.lasertag.commands;
 
 import me.noobedidoob.minigames.Commands;
 import me.noobedidoob.minigames.utils.Utils;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -13,7 +12,6 @@ import me.noobedidoob.minigames.lasertag.session.Session;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 public class ModifierCommands implements CommandExecutor, TabCompleter {
 
@@ -33,21 +31,40 @@ public class ModifierCommands implements CommandExecutor, TabCompleter {
             return true;
         } else {
             if(args[0].equalsIgnoreCase("get")){
-                sendModifiers(sender);
-                return true;
+                if(args.length == 2) {
+                    Mod m = Mod.getMod(args[1]);
+                    if(m == null){
+                        if(sender instanceof Player && Session.getPlayerSession((Player) sender) != null) Session.sendMessage((Player) sender, "§cThe modifier §b"+args[1]+" §cdoesn't exist! Use §e/lt setmodifier §cto get all available modifiers");
+                        else sender.sendMessage("§cThe modifier §b"+args[1]+" §cdoesn't exist! Use §e/lt setmodifier §cto get all available modifiers");
+                        return true;
+                    }
+                    if(sender instanceof Player && Session.getPlayerSession((Player) sender) != null){
+                        Session.sendMessage((Player) sender, "§b" + m.getCommand() + " §7is set to §a" + Session.getPlayerSession((Player) sender).getModValue(m).toString());
+                    } else {
+                        sender.sendMessage("§b" + m.getCommand()+ " §7is set to §a" + m.getOg().toString());
+                    }
+                    return true;
+                } else {
+                    sendModifiers(sender);
+                    return true;
+                }
             } else if(args[0].equalsIgnoreCase("getTypes") | args[0].equalsIgnoreCase("types")) {
                 if(sender instanceof Player){
                     sender.sendMessage("\n§7———————§b§lModifier Types§r§7———————");
                     for(Mod m : Mod.values()) {
-                        sender.sendMessage("§7"+m.name()+" <§a"+m.getValueType().getName()+"§7>");
+                        sender.sendMessage("§7"+m.getCommand()+" <§a"+m.getValueType().getName()+"§7>");
+                        if(m.spaceAfter)sender.sendMessage(" ");
                     }
-                    sender.sendMessage("§7———————————————————\n");
+                    sender.sendMessage(" ");
+                    sender.sendMessage("§7———————(20 ticks = 1 second)———————\n");
                 } else {
                     sender.sendMessage("\n§7------------§b§lModifier Types§r§7------------");
                     for(Mod m : Mod.values()) {
-                        sender.sendMessage("§7"+m.name()+" <§a"+m.getValueType().getName()+"§7>");
+                        sender.sendMessage("§7"+m.getCommand()+" <§a"+m.getValueType().getName()+"§7>");
+                        if(m.spaceAfter)sender.sendMessage(" ");
                     }
-                    sender.sendMessage("§7--------------------------------------\n");
+                    sender.sendMessage(" ");
+                    sender.sendMessage("§7------------(20 ticks = 1 second)------------\n");
                 }
                 return true;
             }
@@ -61,10 +78,10 @@ public class ModifierCommands implements CommandExecutor, TabCompleter {
                 }
 
                 if(args[0].equalsIgnoreCase("set") && args.length == 3) {
-                    Mod m = Mod.getMod(StringUtils.replace(args[1].toUpperCase(), "-", "_"));
+                    Mod m = Mod.getMod(args[1]);
                     String valString = args[2];
-                    //noinspection UnusedAssignment
-                    Object value = valString;
+                    @SuppressWarnings("UnusedAssignment")
+                    Object value = args[2];
 
                     try {
                         value = Integer.parseInt(valString);
@@ -98,13 +115,16 @@ public class ModifierCommands implements CommandExecutor, TabCompleter {
                         return true;
                     }
                 } else if(args[0].equalsIgnoreCase("reset") && args.length == 2){
-                    Mod m = Mod.getMod(StringUtils.replace(args[1].toUpperCase(), "-", "_"));
-                    session.resetMod(m);
+                    Mod m = Mod.getMod(args[1]);
+                    session.setModSilent(m, m.getOg());
+                    session.broadcast("§aThe modifier §b"+m.getCommand()+" §a was set to §e"+m.getOg().toString());
                     return true;
                 } else if(args[0].equalsIgnoreCase("resetAll") && args.length == 1){
                     for(Mod m : Mod.values()){
-                        session.resetMod(m);
+                        session.setModSilent(m, m.getOg());
                     }
+                    session.broadcast("§aAll modifiers ave been reset to default!");
+                    return true;
                 }
             }
 
@@ -132,14 +152,14 @@ public class ModifierCommands implements CommandExecutor, TabCompleter {
                     sender.sendMessage("§7> " + m.getCommand() + ": §a" + s.getModValue(m).toString());
                     if(m.spaceAfter)sender.sendMessage(" ");
                 }
-                sender.sendMessage("§7———————————————————————————\n");
+                sender.sendMessage("§7———————(20 ticks = 1 second)———————\n");
             } else {
                 sender.sendMessage("\n§7———————§b§lStanderd Modifiers§r§7———————");
                 for (Mod m : Mod.values()) {
                     sender.sendMessage("§7> " + m.getCommand()+ ": §a" + m.getOg().toString());
                     if(m.spaceAfter)sender.sendMessage("§7|");
                 }
-                sender.sendMessage("§7————————————————————————\n");
+                sender.sendMessage("§7———————(20 ticks = 1 second)———————\n");
             }
         } else {
             sender.sendMessage("\n§7-----------§b§lStanderd Modifiers§r§7-----------");
@@ -147,7 +167,7 @@ public class ModifierCommands implements CommandExecutor, TabCompleter {
                 sender.sendMessage("§7> " + m.getCommand()+ ": §a" + m.getOg().toString());
                 if(m.spaceAfter)sender.sendMessage("§7|");
             }
-            sender.sendMessage("§7----------------------------------------\n");
+            sender.sendMessage("§7-----------(20 ticks = 1 second)-----------\n");
         }
     }
 
@@ -161,13 +181,13 @@ public class ModifierCommands implements CommandExecutor, TabCompleter {
             if(sender instanceof Player && Session.getPlayerSession((Player) sender) != null && Session.getPlayerSession((Player) sender).waiting() && Session.getPlayerSession((Player) sender).isAdmin((Player) sender)) {
                list.add("set");
             }
-        } else if(sender instanceof Player && args.length >= 2 && args[0].equalsIgnoreCase("set") && Session.getPlayerSession((Player) sender).isAdmin((Player) sender)) {
-            if(args.length == 2) {
+        } else if(sender instanceof Player && args.length >= 2) {
+            if(args.length == 2 && (args[0].equalsIgnoreCase("set") | args[0].equalsIgnoreCase("get"))) {
                 for(Mod m : Mod.values()) {
                     if(m.getCommand().toLowerCase().contains(args[1].toLowerCase())) list.add(m.getCommand());
                 }
-            } else if(args.length == 3 && Mod.getMod(StringUtils.replace(args[1].toUpperCase(), "-", "_")) != null) {
-                if(Mod.getMod(StringUtils.replace(args[1].toUpperCase(), "-", "_")).getValueType().getName().equals("true/false")) {
+            } else if(args.length == 3 && Mod.getMod(args[1]) != null && args[0].equalsIgnoreCase("set") && Session.getPlayerSession((Player) sender).isAdmin((Player) sender)) {
+                if(Mod.getMod(args[1]).getValueType().getName().equals("true/false")) {
                    list.add("true");
                    list.add("false");
                 }

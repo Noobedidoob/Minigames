@@ -36,7 +36,11 @@ Lasertag:
     dagger-damage: 13
     grenade-damage: 15
     headshot-damage-multiplikator: 1.5
-    sniper-shot-damage-multiplikator: 1.5
+    snipe-shot-damage-multiplikator: 1.5
+    point-event-first-event-delay-ticks: 1200
+    point-event-default-length-ticks: 900
+    point-event-next-event-delay-ticks: 900
+    point-event-only-points: true
   maps:
     town:
       center:

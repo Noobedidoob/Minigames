@@ -36,8 +36,8 @@ public class SessionScoreboard {
 
 		long time = session.getTime(TimeFormat.SECONDS);
 		if(session.tagging()) time++;
-		if(time < 3600) obj.getScore("§eTime:  §c§l"+Utils.getTimeFormatFromLong(time, TimeFormat.MINUTES)).setScore(0);
-		else obj.getScore("§eTime:  §c§l"+Utils.getTimeFormatFromLong(time, TimeFormat.HOURS)).setScore(0);
+		if(time < 3600) obj.getScore("§eTime:  §c§l"+Utils.getTimeFormatFromLongSmooth(time, TimeFormat.MINUTES)).setScore(0);
+		else obj.getScore("§eTime:  §c§l"+Utils.getTimeFormatFromLongSmooth(time, TimeFormat.HOURS)).setScore(0);
 		obj.getScore(" ").setScore(1);
 
 		int i = 2;

@@ -7,7 +7,7 @@ import me.noobedidoob.minigames.utils.Utils.ValueType;
 import java.util.Locale;
 
 public enum Mod{
-    POINTS(1, true, 1, 5, "Points x","Normal amount of points a player gets"),
+    POINTS(1, true, 1, 5, "Points: ","Normal amount of points a player gets"),
     SHOT_KILL_EXTRA_POINTS(0, true,-1, 5, "Shot kill points: ", "Extra points when a player shot normal"),
     SNIPER_KILL_EXTRA_POINTS(1, true, -1, 10, "Sniper kill points: ", "Extra points when killing with snipe-shot"),
     HEADSHOT_EXTRA_POINTS(1, true, -1, 10, "Headshot kill points: ", "Extra ponts when killing with headshot"),
@@ -51,12 +51,12 @@ public enum Mod{
     GRENADE_DAMAGE(15, true, 5, 20, "Grenade damage: ", "Grenade explosion damage", true),
 
     HEADSHOT_DAMAGE_MULTILIER(1.3d, true, 0.5D, 5D, "Headshot damage multiplier: ", "Extra damage when hitting the head"),
-    SNIPER_SHOT_DAMAGE_MULTIPLIER(1.3d, true, 0.5D, 5D, "Sniper shot damage multiplier: ", "Extra damage when sniping", true),
+    SNIPE_SHOT_DAMAGE_MULTIPLIER(1.3d, true, 0.5D, 5D, "Sniper shot damage multiplier: ", "Extra damage when sniping", true),
 
 
-    POINT_EVENT_FIRST_COUNTDOWN_TICKS(60*20, "Countdown after the point events start fot the first time"),
-    POINT_EVENT_DEFAULT_EVENT_LENGTH_TICKS(20*45, "How long a point event lasts"),
-    POINT_EVENT_DEFAULT_COUNTDOWN_TICKS(20*45, "Countdown between the point events"),
+    POINT_EVENT_FIRST_EVENT_DELAY_TICKS(60*20, "Countdown after the point events start fot the first time"),
+    POINT_EVENT_DEFAULT_LENGTH_TICKS(20*45, "How long a point event lasts"),
+    POINT_EVENT_NEXT_EVENT_DELAY_TICKS(20*45, "Countdown between the point events"),
     POINT_EVENT_ONLY_POINTS(true, "If events shall only change points");
 
 
@@ -203,4 +203,6 @@ public enum Mod{
             else minigames.getConfig().set(configModName,m.ogValue);
         }
     }
+
+
 }

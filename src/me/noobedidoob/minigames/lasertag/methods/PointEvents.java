@@ -4,6 +4,7 @@ import me.noobedidoob.minigames.Minigames;
 import me.noobedidoob.minigames.lasertag.session.Session;
 import me.noobedidoob.minigames.utils.Utils;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -23,144 +24,156 @@ public class PointEvents {
     public PointEvents(Session session){
         this.session = session;
         for(Mod m : Mod.values()){
-            if(m.inPointEvents) mods.add(m);
+            if(m.inPointEvents) {
+                if(session.getBooleanMod(Mod.POINT_EVENT_ONLY_POINTS) && !m.name().contains("POINTS")) continue;
+                if(!session.withMultiweapons() && (m.name().contains("MULTIWEAPONS") | m.name().contains("SNIPER") | m.name().contains("SHOTGUN") | m.name().contains("DAGGER")) ) continue;
+                if(!session.withGrenades() && m.name().contains("GRENADE")) continue;
+                if(!session.withCaptureTheFlag() && m.name().contains("FLAG")) continue;
+                mods.add(m);
+            }
         }
+
+
     }
 
 
-    boolean enabled;
-    public void setEnabled(boolean enabled){
-        if(enabled && this.enabled && this.running) stopEvents();
-        this.enabled = enabled;
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
     boolean running;
-    public boolean isRunning() {
-        return running;
-    }
 
-
-
-    boolean coolingDown;
     private BukkitTask currentTimer;
     private BossBar bar;
     public void startEvents(){
         System.out.println("starting point events");
-        if(enabled && !running){
+        if(!running){
             running = true;
-            coolingDown = true;
-            bar = Bukkit.createBossBar("§aNext Event in §r§b"+Utils.getTimeFormatFromLong((long) session.getIntMod(Mod.POINT_EVENT_FIRST_COUNTDOWN_TICKS)/20, Utils.TimeFormat.SECONDS),
-                    BarColor.RED, BarStyle.SOLID);
+            bar = Bukkit.createBossBar("Events", BarColor.RED, BarStyle.SOLID);
+            bar.setVisible(false);
             for(Player p : session.getPlayers()) bar.addPlayer(p);
-            bar.setVisible(true);
-            currentTimer = new BukkitRunnable(){
-                int curr = session.getIntMod(Mod.POINT_EVENT_FIRST_COUNTDOWN_TICKS);
+            bar.setVisible(false);
+            new BukkitRunnable(){
                 @Override
                 public void run() {
-                    if (curr > 0) {
-                        curr--;
-                        bar.setProgress((float) curr / session.getIntMod(Mod.POINT_EVENT_FIRST_COUNTDOWN_TICKS));
-                        bar.setTitle("§aNext Event in §r§b"+Utils.getTimeFormatFromLong((long) curr/20, Utils.TimeFormat.SECONDS));
-                    } else {
-                        cancel();
-                        startRandomEvent();
-                    }
+                    prepareNewEvent(session.getIntMod(Mod.POINT_EVENT_FIRST_EVENT_DELAY_TICKS)/2);
                 }
-            }.runTaskTimer(session.minigames, 1, 1);
-        } else if(!enabled) System.out.println("disabled");
+            }.runTaskLater(session.minigames, session.getIntMod(Mod.POINT_EVENT_FIRST_EVENT_DELAY_TICKS)/2);
+        }
     }
 
-    public void stopEvents(){
-        if(currentTimer != null & !currentTimer.isCancelled()) currentTimer.cancel();
-        if(currentEvent != null) session.resetMod(currentEvent.mod);
-        if(bar != null) bar.removeAll();
-    }
-
-    private Event currentEvent;
-    private void startRandomEvent(){
-        coolingDown = false;
-        currentEvent = new Event(session, mods);
-        bar.setColor(BarColor.GREEN);
-        bar.setTitle("§2Current Event: §b"+currentEvent.name+currentEvent.value.toString());
-        session.setMod(currentEvent.mod, currentEvent.value);
+    private Event event;
+    public void prepareNewEvent(int ticks){
+        event = new Event(session, mods);
+        bar.setTitle("§aNext Event: §r§b"+event.name.substring(0, event.name.length()-2)+" §7(§c"+event.backupValue.toString()+" §7-> §a" + event.value.toString()+"§7)");
+        bar.setVisible(true);
+        bar.setColor(BarColor.RED);
         currentTimer = new BukkitRunnable(){
-            int curr = session.getIntMod(Mod.POINT_EVENT_DEFAULT_EVENT_LENGTH_TICKS);
+            int curr = ticks;
+            @Override
+            public void run() {
+                if (curr > 0) {
+                    curr--;
+                    bar.setProgress((float) curr / ticks);
+                } else {
+                    cancel();
+                    startEvent();
+                }
+            }
+        }.runTaskTimer(session.minigames, 1, 1);
+    }
+
+    private void startEvent(){
+        event.start();
+        bar.setColor(BarColor.GREEN);
+        bar.setProgress(1);
+        bar.setTitle("§2Current Event: §b" + event.name + event.value.toString());
+        currentTimer = new BukkitRunnable(){
+            int curr = session.getIntMod(Mod.POINT_EVENT_DEFAULT_LENGTH_TICKS);
             @Override
             public void run() {
                 if(curr > 0){
                     curr--;
-                    bar.setProgress((float) curr / session.getIntMod(Mod.POINT_EVENT_DEFAULT_EVENT_LENGTH_TICKS));
+                    bar.setProgress((float) curr / session.getIntMod(Mod.POINT_EVENT_DEFAULT_LENGTH_TICKS));
                 } else {
                     cancel();
-                    session.resetMod(currentEvent.mod);
-                    currentTimer = new BukkitRunnable(){
-                        int curr = session.getIntMod(Mod.POINT_EVENT_DEFAULT_COUNTDOWN_TICKS);
-                        @Override
-                        public void run() {
-                            if (curr > 0) {
-                                curr--;
-                                bar.setProgress((float) curr / session.getIntMod(Mod.POINT_EVENT_DEFAULT_COUNTDOWN_TICKS));
-                                bar.setTitle("§aNext Event in §r§b"+Utils.getTimeFormatFromLong((long) curr/20, Utils.TimeFormat.SECONDS));
-                            } else {
-                                cancel();
-                                startRandomEvent();
-                            }
-                        }
-                    }.runTaskTimer(session.minigames, 1, 1);
+                    event.reset();
+                    prepareNewEvent(session.getIntMod(Mod.POINT_EVENT_NEXT_EVENT_DELAY_TICKS));
                 }
             }
         }.runTaskTimer(session.minigames, 1 , 1);
     }
 
+    public void stopEvents(){
+        running = false;
+        if(currentTimer != null & !currentTimer.isCancelled()) currentTimer.cancel();
+        if(event != null) event.resetSilent();
+        if(bar != null) bar.removeAll();
+    }
 
 }
 
 class Event{
 
+    private final Session session;
     public final Mod mod;
     public final String name;
     public final int ticks;
     public final Object value;
+    public final Object backupValue;
 
     public Event(Session session, ArrayList<Mod> mods){
+        this.session = session;
         Mod randomMod = mods.get(Utils.randomInt(0, mods.size()-1));
         System.out.println("new event: "+randomMod.getCommand());
-        while ((randomMod.name().contains("MULTIWEAPONS") | randomMod.name().contains("MULTIPLIER")) & !session.withMultiweapons()) randomMod = mods.get(Utils.randomInt(0, mods.size()-1));
-        while (randomMod.name().contains("NORMAL") & session.withMultiweapons()) randomMod = mods.get(Utils.randomInt(0, mods.size()-1));
         this.mod = randomMod;
         this.name = mod.eventName;
+        this.backupValue = session.getModValue(mod);
 
-        System.out.println("instantiating "+mod.name()+" event");
         int max = (session.getTime(Utils.TimeFormat.SECONDS) < 60)?session.getTime(Utils.TimeFormat.SECONDS)*20:20*60;
         ticks = Utils.randomInt(Math.round(max/2f), max);
         Object value = mod.getOg();
-        switch (mod.getValueType()){
-            case INTEGER:
-                value = Utils.randomInt((Integer) mod.eventChangeRange.get1(), (Integer) mod.eventChangeRange.get2());
-                if(mod.name().contains("TICK")) value = ((int) value )/ 20;
-                break;
-            case DOUBLE:
-                try {
-                    value = Utils.randomDouble((Double) mod.eventChangeRange.get1(),(Double) mod.eventChangeRange.get2());
-                } catch (Exception exception) {
+        while (value == mod.getOg()){
+            switch (mod.getValueType()){
+                case INTEGER:
+                    value = Utils.randomInt((Integer) mod.eventChangeRange.get1(), (Integer) mod.eventChangeRange.get2());
+                    if(mod.name().contains("TICK")) value = ((int) value )/ 20;
+                    break;
+                case DOUBLE:
                     try {
-                        value = Utils.randomInt((Integer) mod.eventChangeRange.get1(), (Integer) mod.eventChangeRange.get2());
-                    } catch (Exception e) {
-                        value = mod.getOg();
-                        Minigames.severe("ERROR occured while parsing");
-                        e.printStackTrace();
+                        value = Utils.randomDouble((Double) mod.eventChangeRange.get1(),(Double) mod.eventChangeRange.get2());
+                    } catch (Exception exception) {
+                        try {
+                            value = Utils.randomInt((Integer) mod.eventChangeRange.get1(), (Integer) mod.eventChangeRange.get2());
+                        } catch (Exception e) {
+                            value = mod.getOg();
+                            Minigames.severe("ERROR occured while parsing");
+                            e.printStackTrace();
+                        }
                     }
-                }
-                break;
-            case BOOLEAN:
-                value = new Random().nextBoolean();
-                break;
-            default:
-                break;
+                    break;
+                case BOOLEAN:
+                    value = new Random().nextBoolean();
+                    break;
+                default:
+                    break;
+            }
         }
         this.value = value;
+    }
+
+    public void start(){
+        session.setModSilent(mod, value);
+        for (Player p : session.getPlayers()) {
+            p.sendTitle("", "§b"+name+" §c"+backupValue.toString()+" §7-> §a" + value.toString(), 10, 40, 10);
+            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 2, 1);
+            Utils.runLater(()->p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 2, 1), 5);
+        }
+    }
+
+    public void reset(){
+        session.setModSilent(mod, backupValue);
+        for (Player p : session.getPlayers()) {
+            p.sendTitle("", "§b"+name.substring(0, name.length()-2)+ " §awas resetset to §e" + backupValue.toString(), 10, 3*20, 10);
+        }
+    }
+    public void resetSilent(){
+        session.setModSilent(mod, backupValue);
     }
 }

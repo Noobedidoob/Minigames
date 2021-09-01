@@ -12,11 +12,11 @@ commands:
    session:
       description: Prefix for all session commands
       usage: use '/session' to see all commands
-      aliases: [s, ssn, sss]
+      aliases: [s]
    modifier:
       description: Prefix for all modifier commands
       usage: use '/modifier' to see all commands
-      aliases: [mod,mods]
+      aliases: [m,mod,mods,modifiers]
    hideandseek:
       description: Prefix for all HideAndSeek commands
       usage: use '/hideandseek' for all commands
